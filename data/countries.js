@@ -26,8 +26,8 @@ const COUNTRIES = [
   { id: "TH", nameKo: "태국",     nameEn: "Thailand",    capitalKo: "방콕",   continent: "아시아", flag: "🇹🇭", landmarkKo: "왓 프라깨우",       landmarkImg: "assets/landmarks/TH.jpg", price: 42, rent: 8 },
   { id: "VN", nameKo: "베트남",   nameEn: "Vietnam",     capitalKo: "하노이", continent: "아시아", flag: "🇻🇳", landmarkKo: "하롱베이",         landmarkImg: "assets/landmarks/VN.jpg", price: 38, rent: 8 },
   { id: "SG", nameKo: "싱가포르", nameEn: "Singapore",   capitalKo: "싱가포르", continent: "아시아", flag: "🇸🇬", landmarkKo: "마리나 베이 샌즈", landmarkImg: "assets/landmarks/SG.jpg", price: 60, rent: 12 },
-  { id: "AE", nameKo: "아랍에미리트", nameEn: "UAE",      capitalKo: "아부다비", continent: "아시아", flag: "🇦🇪", landmarkKo: "셰이크 자이드 모스크", landmarkImg: "assets/landmarks/AE.jpg", price: 62, rent: 12 },
-  { id: "SA", nameKo: "사우디아라비아", nameEn: "Saudi Arabia", capitalKo: "리야드", continent: "아시아", flag: "🇸🇦", landmarkKo: "킹덤 센터",  landmarkImg: "assets/landmarks/SA.jpg", price: 55, rent: 11 },
+  { id: "TR", nameKo: "튀르키예", nameEn: "Türkiye",     capitalKo: "앙카라", continent: "아시아", flag: "🇹🇷", landmarkKo: "아야소피아",      landmarkImg: "assets/landmarks/TR.jpg", price: 58, rent: 12 },
+  { id: "MN", nameKo: "몽골",     nameEn: "Mongolia",    capitalKo: "울란바토르", continent: "아시아", flag: "🇲🇳", landmarkKo: "칭기즈칸 기마상", landmarkImg: "assets/landmarks/MN.jpg", price: 42, rent: 8 },
 
   // ---------------- 유럽 ----------------
   { id: "GB", nameKo: "영국",     nameEn: "United Kingdom", capitalKo: "런던",   continent: "유럽", flag: "🇬🇧", landmarkKo: "빅벤",             landmarkImg: "assets/landmarks/GB.jpg", price: 80, rent: 16 },
@@ -54,7 +54,7 @@ const COUNTRIES = [
 
   // ---------------- 아프리카 ----------------
   { id: "EG", nameKo: "이집트",   nameEn: "Egypt",         capitalKo: "카이로", continent: "아프리카", flag: "🇪🇬", landmarkKo: "기자 피라미드", landmarkImg: "assets/landmarks/EG.jpg", price: 40, rent: 8 },
-  { id: "ZA", nameKo: "남아프리카공화국", nameEn: "South Africa", capitalKo: "프리토리아", continent: "아프리카", flag: "🇿🇦", landmarkKo: "테이블 마운틴", landmarkImg: "assets/landmarks/ZA.jpg", price: 42, rent: 8 },
+  { id: "ZA", nameKo: "남아공",   nameEn: "South Africa", capitalKo: "프리토리아", continent: "아프리카", flag: "🇿🇦", landmarkKo: "테이블 마운틴", landmarkImg: "assets/landmarks/ZA.jpg", price: 42, rent: 8 },
   { id: "KE", nameKo: "케냐",     nameEn: "Kenya",         capitalKo: "나이로비", continent: "아프리카", flag: "🇰🇪", landmarkKo: "마사이마라",   landmarkImg: "assets/landmarks/KE.jpg", price: 38, rent: 8 },
   { id: "MA", nameKo: "모로코",   nameEn: "Morocco",       capitalKo: "라바트", continent: "아프리카", flag: "🇲🇦", landmarkKo: "하산 탑",         landmarkImg: "assets/landmarks/MA.jpg", price: 40, rent: 8 },
 

@@ -55,6 +55,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.ds-turn .ds-turn-count {
+  flex-shrink: 0;
+  font-size: clamp(0.7rem, 2.6cqmin, 1rem);
+  color: var(--navy);
+  opacity: 0.55;
+  background: var(--cream);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
 .ds-turn .piece--lg {
   width: clamp(3rem, 13cqmin, 5.4rem);
   height: clamp(3rem, 13cqmin, 5.4rem);

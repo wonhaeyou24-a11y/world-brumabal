@@ -8,61 +8,42 @@
 @media (min-width: 900px) {
   #screen-game {
     flex-direction: row;
-    align-items: stretch;
-    justify-content: center;
-    gap: clamp(14px, 2vw, 32px);
-    max-width: 2100px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: clamp(10px, 1.6vw, 28px);
+    max-width: none;
     height: 100dvh;
     max-height: 100dvh;
     overflow: hidden;
-    padding: clamp(10px, 1.6vh, 20px) clamp(14px, 2vw, 40px);
+    padding: 8px;
   }
 
-  /* 게임판: 세로 공간을 거의 다 채우고, 사이드바(약 420px)를 뺀 만큼 최대한 크게 */
+  /* 게임판: 세로 공간을 꽉 채워서 왼쪽에 크게. 사이드바(약 400px)를 뺀 만큼 */
   #board-wrapper {
     flex: 0 0 auto;
     align-self: center;
-    width: min(100dvh - 24px, 100vw - 460px);
-    height: min(100dvh - 24px, 100vw - 460px);
-    max-width: 1400px;
-    max-height: 1400px;
+    width: min(100dvh - 16px, 100vw - 420px);
+    height: min(100dvh - 16px, 100vw - 420px);
+    max-width: 1500px;
+    max-height: 1500px;
     aspect-ratio: auto;
     margin: 0;
   }
 
-  /* 사이드바: 오른쪽에 붙이고 세로로 꽉 채운다. 스크롤 없이 한눈에 */
+  /* 사이드바: 남는 오른쪽 공간을 차지하고 세로로 꽉 채운다. 스크롤 없이 한눈에 */
   #game-side {
     flex: 1 1 auto;
-    max-width: clamp(320px, 26vw, 440px);
-    min-width: 300px;
+    max-width: clamp(300px, 24vw, 420px);
+    min-width: 288px;
+    margin-left: auto;
     align-self: stretch;
     justify-content: flex-start;
     gap: clamp(10px, 1.4vh, 18px);
+    padding-top: 52px; /* 우측 상단 모서리 버튼 자리 확보 */
     overflow: hidden;
   }
 
-  .game-topbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 16px 20px;
-    border-radius: var(--radius-lg);
-  }
-  .turn-indicator {
-    font-size: clamp(1.3rem, 2vw, 1.8rem);
-    justify-content: center;
-    text-align: center;
-  }
-  .turn-indicator .turn-name { white-space: normal; }
-  .turn-indicator .piece--md { width: 3.6rem; height: 3.6rem; }
-  .topbar-right { justify-content: center; gap: 12px; }
-  .turn-counter {
-    font-size: 1.05rem;
-    font-family: "Jua", sans-serif;
-    background: var(--cream);
-    padding: 4px 14px;
-    border-radius: 999px;
-  }
+  .game-corner-btns { top: 12px; right: 12px; gap: 10px; }
   .topbar-icon-btn { width: 46px; height: 46px; font-size: 1.35rem; }
 
   /* 플레이어 카드: 1열, 세로 공간을 나눠 갖고 스크롤 없이 채운다 */
@@ -88,8 +69,8 @@
 
 /* 아주 넓은 화면(24인치+): 판을 더 키우고 카드도 큼직하게 */
 @media (min-width: 1600px) {
-  #board-wrapper { width: min(100dvh - 24px, 100vw - 560px); height: min(100dvh - 24px, 100vw - 560px); }
-  #game-side { max-width: 520px; }
+  #board-wrapper { width: min(100dvh - 16px, 100vw - 520px); height: min(100dvh - 16px, 100vw - 520px); }
+  #game-side { max-width: 480px; }
   .pc-money { font-size: 1.7rem; }
   .pc-avatar .piece { width: 5.6rem; height: 5.6rem; }
 }
@@ -98,7 +79,6 @@
 @media (min-width: 700px) and (orientation: portrait) {
   #screen-game { max-width: 920px; padding: 22px; gap: 18px; }
   #board-wrapper { max-width: 820px; }
-  .turn-indicator { font-size: 1.4rem; }
   .player-panel { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
   .pc-money { font-size: 1.35rem; }
 }

@@ -32,7 +32,12 @@ function showTurnPrompt(player, onRoll) {
   if (!stage) return;
 
   const piece = window.pieceMarkup ? window.pieceMarkup(window.playerPiece(player), "lg") : "";
-  turn.innerHTML = `${piece}<span class="ds-name">${player.name}${player.isAI ? " 🤖" : ""}의 차례!</span>`;
+  const gs = window.gameState;
+  const turnTxt =
+    gs && gs.maxTurns && gs.endMode !== "bankruptcy"
+      ? `<span class="ds-turn-count">${gs.turn} / ${gs.maxTurns}턴</span>`
+      : "";
+  turn.innerHTML = `${piece}<span class="ds-name">${player.name}${player.isAI ? " 🤖" : ""}의 차례!</span>${turnTxt}`;
   if (dice) dice.hidden = false;
   die.textContent = "🎲";
   die2.textContent = "🎲";

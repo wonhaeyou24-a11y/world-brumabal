@@ -323,16 +323,7 @@ function flashMoney(playerId, delta) {
   setTimeout(() => badge.remove(), 1200);
 }
 
-function renderTopbar(gameState) {
-  const current = getCurrentPlayer(gameState);
-  const tag = current.isAI ? " 🤖" : "";
-  document.getElementById("turn-indicator").innerHTML =
-    `${pieceMarkup(playerPiece(current), "md")}<span class="turn-name">${escapeHtml(current.name)}의 차례!${tag}</span>`;
-  document.getElementById("turn-counter").textContent = `${gameState.turn} / ${gameState.maxTurns}턴`;
-}
-
 function renderGameScreen(gameState) {
-  renderTopbar(gameState);
   renderPlayerPanel(gameState);
   renderBoardDynamic(gameState);
 }
