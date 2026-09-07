@@ -6,7 +6,7 @@
  * 한 번 본 뒤에는 바로 메인으로 가고, 시작 화면의 "인트로 다시보기"로 언제든 다시 볼 수 있다.
  */
 
-const INTRO_SEEN_KEY = "worldBrumabal_introSeen_v1";
+const INTRO_SEEN_KEY = "worldBrumabal_introSeen_v2"; // 새 영상으로 교체 → 한 번씩 다시 보이도록
 
 document.addEventListener("DOMContentLoaded", () => {
   const screen = document.getElementById("screen-intro");
