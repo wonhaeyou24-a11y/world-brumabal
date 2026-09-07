@@ -28,12 +28,13 @@
     margin: 0;
   }
 
-  /* 사이드바: 화면이 넓을수록 넓게 (남는 여백을 카드가 채우도록) */
+  /* 사이드바: 위쪽부터 채운다 (옵션·차례 박스 + 프로필을 상단 배치). 게임판은 가운데 유지 */
   #game-side {
     flex: 1 1 auto;
     max-width: clamp(360px, 34vw, 560px);
     min-width: 340px;
-    justify-content: center;
+    align-self: flex-start;
+    justify-content: flex-start;
     gap: clamp(14px, 2vh, 22px);
   }
 

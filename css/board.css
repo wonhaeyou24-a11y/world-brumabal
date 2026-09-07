@@ -173,10 +173,14 @@
 .tile > * { flex-shrink: 0; max-width: 100%; }
 
 .tile-flag {
-  font-size: clamp(0.85rem, 3.9cqmin, 2.1rem);
-  line-height: 1;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12));
+  line-height: 0;
 }
+.tile-flag .flag {
+  width: clamp(1.3rem, 5cqmin, 2.6rem);
+  border-radius: clamp(2px, 0.7cqmin, 4px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(31, 42, 68, 0.14);
+}
+.tile-flag .flag-emoji { font-size: clamp(0.8rem, 3.6cqmin, 1.9rem); }
 .tile-icon {
   font-size: clamp(1.1rem, 5cqmin, 2.8rem);
   line-height: 1;
@@ -234,75 +238,123 @@
   justify-content: center;
 }
 
-/* ---------- 말(토큰) — 게임판 위에 떠 있는 느낌 ---------- */
+/* ---------- 말(토큰) — 원형 얼굴 + 애니메이션 몸 ---------- */
 .tile-tokens {
   position: absolute;
-  top: -1.2cqmin;
-  right: -1.2cqmin;
+  top: -2cqmin;
+  right: -1.4cqmin;
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
-  max-width: 80%;
+  max-width: 90%;
   justify-content: flex-end;
   z-index: 5;
 }
 .tile-token {
   --tok-color: var(--sky);
+  --tok-size: clamp(1.1rem, 5cqmin, 2.4rem);
   position: relative;
-  font-size: clamp(0.9rem, 3.6cqmin, 1.9rem);
-  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.28));
-  transition: transform 0.15s ease;
+  width: var(--tok-size);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.26));
 }
-/* 말 밑 그림자(입체감) */
+.tile-token .token-head {
+  display: block;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+.tile-token .token-head .piece {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  font-size: calc(var(--tok-size) * 0.9);
+}
+.tile-token .token-head .piece .piece-photo:not(.is-missing) {
+  box-shadow: 0 0 0 2px var(--white), 0 0 0 3.5px var(--tok-color);
+}
+
+/* 몸통 + 다리 */
+.token-body {
+  position: relative;
+  width: 62%;
+  height: calc(var(--tok-size) * 0.5);
+  margin-top: -8%;
+  background: var(--tok-color);
+  border-radius: 40% 40% 30% 30%;
+  z-index: 1;
+}
+.token-leg {
+  position: absolute;
+  bottom: -42%;
+  width: 26%;
+  height: 55%;
+  background: var(--tok-color);
+  border-radius: 40%;
+  transform-origin: top center;
+}
+.token-leg:nth-child(1) { left: 14%; }
+.token-leg:nth-child(2) { right: 14%; }
+/* 말 밑 그림자 */
 .tile-token::after {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -18%;
-  width: 78%;
-  height: 22%;
+  bottom: -14%;
+  width: 70%;
+  height: 16%;
   transform: translateX(-50%);
-  background: rgba(31, 42, 68, 0.28);
+  background: rgba(31, 42, 68, 0.26);
   border-radius: 50%;
-  filter: blur(2px);
-  z-index: -1;
+  filter: blur(1.5px);
+  z-index: 0;
 }
+
 /* 현재 차례인 말: 크게 + 둥둥 + 컬러 후광 */
 .tile-token.is-current {
-  font-size: clamp(1.4rem, 6cqmin, 3rem);
-  animation: token-bob 0.9s ease-in-out infinite;
+  --tok-size: clamp(1.6rem, 7cqmin, 3.2rem);
   z-index: 8;
+  animation: token-bob 0.9s ease-in-out infinite;
 }
 .tile-token.is-current::before {
   content: "";
   position: absolute;
   left: 50%;
-  top: 50%;
-  width: 150%;
-  height: 150%;
+  top: 30%;
+  width: 160%;
+  height: 160%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, var(--tok-color) 0%, transparent 70%);
-  opacity: 0.5;
+  background: radial-gradient(circle, var(--tok-color) 0%, transparent 68%);
+  opacity: 0.45;
   z-index: -1;
-}
-.tile-token.is-current .piece {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95), 0 0 0 6px var(--tok-color);
-  border-radius: 50%;
 }
 @keyframes token-bob {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-16%); }
+  50% { transform: translateY(-12%); }
 }
-/* 한 칸 이동할 때 "깡총" (입체적으로 튀어오름) */
-.tile-token--hop {
-  animation: token-hop 0.3s ease-out;
+
+/* 한 칸 넘어갈 때: 몸이 걷는 움직임 */
+.tile-token--walk { animation: token-walk 0.3s ease-in-out; }
+.tile-token--walk .token-leg:nth-child(1) { animation: leg-a 0.3s ease-in-out; }
+.tile-token--walk .token-leg:nth-child(2) { animation: leg-b 0.3s ease-in-out; }
+@keyframes token-walk {
+  0% { transform: translateY(0) rotate(0); }
+  30% { transform: translateY(-30%) rotate(-6deg); }
+  60% { transform: translateY(-8%) rotate(5deg); }
+  100% { transform: translateY(0) rotate(0); }
 }
-@keyframes token-hop {
-  0% { transform: translateY(0) scale(1); }
-  35% { transform: translateY(-70%) scale(1.25, 0.9); }
-  70% { transform: translateY(0) scale(0.85, 1.15); }
-  100% { transform: translateY(0) scale(1); }
+@keyframes leg-a {
+  0%, 100% { transform: rotate(0); }
+  40% { transform: rotate(38deg); }
+  70% { transform: rotate(-22deg); }
+}
+@keyframes leg-b {
+  0%, 100% { transform: rotate(0); }
+  40% { transform: rotate(-38deg); }
+  70% { transform: rotate(22deg); }
 }
 
 /* 현재 플레이어가 서 있는 칸 */
@@ -325,6 +377,7 @@
   .board-center .center-globe,
   .tile--event .tile-icon,
   .tile-token.is-current,
-  .tile-token--hop,
+  .tile-token--walk,
+  .tile-token--walk .token-leg,
   .tile--landing { animation: none; }
 }

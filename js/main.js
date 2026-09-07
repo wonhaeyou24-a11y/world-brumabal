@@ -167,6 +167,11 @@ function bindGameScreen() {
   });
 
   document.getElementById("player-panel").addEventListener("click", (e) => {
+    const tab = e.target.closest(".owned-tab[data-country-id]");
+    if (tab) {
+      showOwnedCountryCard(tab.dataset.countryId);
+      return;
+    }
     const btn = e.target.closest('[data-action="toggle-owned"]');
     if (btn) togglePlayerOwned(Number(btn.dataset.playerId));
   });
@@ -238,6 +243,21 @@ function showSettingsModal() {
 let pendingArrival = null; // { countryId, discountRate, quizDone }
 let pendingQuiz = null;    // { quiz, context: "purchase" | "event" }
 let pendingEventCard = null;
+
+/** 보유 국가 탭을 눌렀을 때 그 나라 카드를 보여준다 (게임 진행에는 영향 없음) */
+function showOwnedCountryCard(countryId) {
+  const gs = window.gameState;
+  const country = getCountryById(countryId);
+  if (!country) return;
+  const ownerId = gs ? getCountryOwnerId(gs, countryId) : null;
+  const owner = ownerId != null ? gs.players.find((p) => p.id === ownerId) : null;
+  showModal(`
+    ${buildCountryCard(country, { ownerName: owner ? owner.name : "--" })}
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" data-action="close-modal">닫기</button>
+    </div>
+  `);
+}
 
 function markVisit(gs, playerId, countryId) {
   recordVisit(gs, playerId, countryId);
@@ -480,7 +500,7 @@ function handleEventTile() {
     const country = getCountryById(res.countryId);
     showModal(`
       ${buildCountryCard(country, { travelerName: player.name })}
-      <p class="modal-message">✈️ <b>${country.nameKo}</b>(으)로 여행을 떠났어요!<br>도감에 기록됐어요 🧳</p>
+      <p class="modal-message">✈️ <b>${escapeAttr(country.nameKo)}</b>(으)로 여행을 떠났어요!<br>도감에 기록됐어요 🧳</p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -672,8 +692,12 @@ function aiClick(el) {
 function aiResolveModal(gs, player, overlay) {
   const has = (action) => overlay.querySelector(`[data-action="${action}"]`);
 
-  // 설정 모달은 사용자가 연 것 — AI가 건드리지 않는다
+  // 설정 모달·정보용 나라 카드는 사용자가 연 것 — 게임 행동 버튼이 없으면 AI가 건드리지 않는다
   if (has("toggle-sound") || has("toggle-anim")) return;
+  const actionable =
+    has("buy-country") || has("skip-buy") || has("confirm-arrival") ||
+    has("quiz-answer") || has("quiz-result-to-arrival") || has("try-purchase-quiz");
+  if (!actionable) return;
 
   // 1) 퀴즈 보기가 있으면 답을 고른다
   if (has("quiz-answer") && pendingQuiz) {

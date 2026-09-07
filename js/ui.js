@@ -166,7 +166,7 @@ function buildBoardDOMOnce(gameState) {
       const c = getCountryById(tile.countryId);
       tileEl.className = "tile tile--country";
       tileEl.innerHTML = `
-        <div class="tile-flag">${c.flag}</div>
+        <div class="tile-flag">${flagMarkup(c)}</div>
         <div class="tile-name">${c.nameKo}</div>
         <div class="tile-capital">${c.capitalKo}</div>
         <div class="tile-owner-bar" data-owner-bar></div>
@@ -218,8 +218,10 @@ function renderBoardDynamic(gameState, opts = {}) {
     span.className = "tile-token" + (p.id === current.id ? " is-current" : "");
     span.style.setProperty("--tok-color", p.color);
     span.dataset.playerId = p.id;
-    span.innerHTML = pieceMarkup(playerPiece(p), "sm");
-    if (p.id === opts.hopPlayerId) span.classList.add("tile-token--hop");
+    span.innerHTML =
+      `<span class="token-head">${pieceMarkup(playerPiece(p), "sm")}</span>` +
+      `<span class="token-body"><i class="token-leg"></i><i class="token-leg"></i></span>`;
+    if (p.id === opts.hopPlayerId) span.classList.add("tile-token--walk");
     tokenWrap.appendChild(span);
   });
 
@@ -255,10 +257,10 @@ function ownedFolderHTML(player) {
   const tabs = owned
     .map(
       (c) => `
-      <span class="owned-tab" title="${escapeHtml(c.nameKo)}">
-        <span class="owned-flag">${c.flag}</span>
+      <button type="button" class="owned-tab" data-country-id="${c.id}" title="${escapeHtml(c.nameKo)} 카드 보기">
+        <span class="owned-flag">${flagMarkup(c)}</span>
         <span class="owned-name">${escapeHtml(c.nameKo)}</span>
-      </span>`
+      </button>`
     )
     .join("");
   return `<div class="owned-folder">${tabs}</div>`;
@@ -392,7 +394,7 @@ function renderCollectionScreen(gameState) {
       return `
         <div class="collection-card is-visited">
           <div class="collection-photo">${landmarkImgHTML(c)}</div>
-          <div class="collection-name">${c.flag} ${escapeHtml(c.nameKo)}</div>
+          <div class="collection-name">${flagMarkup(c, "flag--inline")} ${escapeHtml(c.nameKo)}</div>
           <div class="collection-capital">🏙️ ${escapeHtml(c.capitalKo)} · ${escapeHtml(c.landmarkKo)}</div>
           <div class="collection-meta">${escapeHtml(c.continent)}${times}</div>
         </div>`;
@@ -407,7 +409,16 @@ function landmarkImgHTML(country, extraClass) {
   return `<span class="landmark ${extraClass || ""}">
     <img class="landmark-photo" src="${country.landmarkImg}" alt="${escapeHtml(country.landmarkKo)}"
          onerror="this.classList.add('is-missing')" />
-    <span class="landmark-flag">${country.flag}</span>
+    <span class="landmark-flag">${flagMarkup(country)}</span>
+  </span>`;
+}
+
+/** 국기 이미지(SVG). 파일이 없으면 이모지로 대체 */
+function flagMarkup(country, extraClass) {
+  return `<span class="flag ${extraClass || ""}">
+    <img class="flag-img" src="assets/flags/${country.id}.svg" alt="${escapeHtml(country.nameKo)} 국기"
+         onerror="this.classList.add('is-missing')" />
+    <span class="flag-emoji">${country.flag}</span>
   </span>`;
 }
 
@@ -432,7 +443,7 @@ function buildCountryCard(country, opts = {}) {
 
   return `
     <div class="cc-head">
-      <div class="cc-title">[${escapeHtml(country.nameKo)}] ${escapeHtml(country.landmarkKo)}</div>
+      <div class="cc-title">${flagMarkup(country, "flag--title")} [${escapeHtml(country.nameKo)}] ${escapeHtml(country.landmarkKo)}</div>
       ${opts.travelerName ? `<div class="cc-traveler">현재 여행자: ${escapeHtml(opts.travelerName)}</div>` : ""}
     </div>
     <div class="cc-body">
@@ -483,5 +494,6 @@ window.renderCollectionScreen = renderCollectionScreen;
 window.buildQuizModalHTML = buildQuizModalHTML;
 window.buildCountryCard = buildCountryCard;
 window.landmarkImgHTML = landmarkImgHTML;
+window.flagMarkup = flagMarkup;
 window.flashMoney = flashMoney;
 window.getBoardTiles = () => currentBoardTiles;

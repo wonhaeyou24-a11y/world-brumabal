@@ -195,7 +195,10 @@
   box-shadow: 0 1px 2px rgba(31, 42, 68, 0.14);
   max-width: 100%;
 }
-.owned-tab .owned-flag { font-size: 1rem; flex-shrink: 0; }
+.owned-tab { cursor: pointer; }
+.owned-tab:active { transform: scale(0.95); }
+.owned-tab .owned-flag { display: inline-flex; flex-shrink: 0; }
+.owned-tab .owned-flag .flag { width: 1.3rem; }
 .owned-tab .owned-name {
   font-weight: bold;
   white-space: nowrap;
@@ -354,9 +357,11 @@
 .cc-title {
   font-family: "Jua", sans-serif;
   font-size: 1.3rem;
-  line-height: 1.25;
+  line-height: 1.35;
   word-break: keep-all;
 }
+.cc-title .flag--title { width: 1.5em; vertical-align: -0.35em; margin-right: 0.15em; }
+.landmark-flag .flag { width: 42%; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
 .cc-traveler {
   font-size: 0.85rem;
   opacity: 0.6;
