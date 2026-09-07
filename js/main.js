@@ -19,7 +19,26 @@ document.addEventListener("DOMContentLoaded", () => {
   bindGameScreen();
   bindCollectionScreen();
   bindResultScreen();
+  preventLongPressMenus();
 });
+
+/**
+ * 주사위·글자 등을 길게 눌러도 우클릭(컨텍스트) 메뉴나 텍스트 블록지정이 뜨지 않게 한다.
+ * 게임에 필요한 입력 요소(select 등)는 그대로 둔다.
+ */
+function preventLongPressMenus() {
+  const isEditable = (el) =>
+    el && el.closest && el.closest("input, textarea, select, [contenteditable='true']");
+
+  document.addEventListener("contextmenu", (e) => {
+    if (!isEditable(e.target)) e.preventDefault();
+  });
+
+  // 길게 눌러 나타나는 선택 핸들 방지 (iOS/안드로이드) — 드래그로 시작되는 selection 취소
+  document.addEventListener("selectstart", (e) => {
+    if (!isEditable(e.target)) e.preventDefault();
+  });
+}
 
 /* ---------------------------------------------------------
    시작 화면
