@@ -179,7 +179,15 @@ function bindGameScreen() {
   // 모달 안의 버튼은 동적으로 생성되므로 이벤트 위임으로 처리
   document.getElementById("modal-overlay").addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
-    if (!btn) return;
+    if (!btn) {
+      // 터치로 넘어가는 모달(통행료 카드 등): 버튼이 아닌 곳을 눌러도 다음 차례로
+      const overlay = document.getElementById("modal-overlay");
+      if (overlay.classList.contains("modal--tap") && isModalOpen()) {
+        const gs = window.gameState;
+        if (gs && gs.status === "playing" && !getCurrentPlayer(gs).isAI) finishTurn();
+      }
+      return;
+    }
     const action = btn.dataset.action;
 
     if (action === "close-modal") {
@@ -413,16 +421,16 @@ function handleArrival() {
 
     if (window.flashMoney) flashMoney(player.id, -result.amount);
     const rentModalHTML = `
+      <div class="modal-flag">💸</div>
+      <h3 class="modal-title" style="color:var(--coral)">${escapeAttr(owner.name)}의 나라에 걸렸어요!</h3>
       ${buildCountryCard(country, { travelerName: player.name, ownerName: owner.name, myMoney: player.money })}
       <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-${won(result.amount)}</span></div>
       <div class="modal-rent-row positive"><span>${pcMarkup(owner)} ${escapeAttr(owner.name)}</span><span>+${won(result.amount)}</span></div>
-      <div class="modal-actions">
-        <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
-      </div>
+      <button class="btn btn-primary btn-block modal-tap-hint" data-action="confirm-arrival">👆 화면을 터치하면 넘어가요</button>
     `;
     showFxBurst("rent", {
       text: `${owner.name}에게 통행료 ${won(result.amount)}!`,
-      onDone: () => showModal(rentModalHTML),
+      onDone: () => showModal(rentModalHTML, { tapAnywhere: true }),
     });
   }
 }

@@ -33,7 +33,7 @@ function buildCapitalQuiz(country) {
   return {
     type: "capital",
     countryId: country.id,
-    prompt: `${country.flag} ${country.nameKo}의 수도는 어디일까요?`,
+    prompt: `${country.nameKo}의 수도는 어디일까요?`,
     choices: _shuffle([country.capitalKo, ...wrongs]),
     answer: country.capitalKo,
   };
@@ -46,7 +46,7 @@ function buildFlagQuiz(country) {
   return {
     type: "flag",
     countryId: country.id,
-    prompt: `${country.flag}  이 국기는 어느 나라일까요?`,
+    prompt: `이 국기는 어느 나라의 국기일까요?`,
     choices: _shuffle([country.nameKo, ...wrongs]),
     answer: country.nameKo,
   };

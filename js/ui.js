@@ -16,14 +16,18 @@ function showScreen(screenId) {
 /* ---------------------------------------------------------
    모달
 --------------------------------------------------------- */
-function showModal(innerHTML) {
+function showModal(innerHTML, opts = {}) {
   const overlay = document.getElementById("modal-overlay");
   const content = document.getElementById("modal-content");
   content.innerHTML = innerHTML;
+  // 화면 아무 곳이나 터치하면 넘어가는 모달(통행료 등)
+  overlay.classList.toggle("modal--tap", !!opts.tapAnywhere);
   overlay.classList.remove("hidden");
 }
 function hideModal() {
-  document.getElementById("modal-overlay").classList.add("hidden");
+  const overlay = document.getElementById("modal-overlay");
+  overlay.classList.add("hidden");
+  overlay.classList.remove("modal--tap");
 }
 
 /* ---------------------------------------------------------
@@ -152,6 +156,11 @@ function buildBoardDOMOnce(gameState) {
     tileEl.dataset.index = tile.index;
     tileEl.style.gridRow = tile.row + 1;
     tileEl.style.gridColumn = tile.col + 1;
+
+    // 게임판 어느 가장자리에 있는 칸인지 (주인 표시를 바깥 여백으로 빼기 위함)
+    const edge =
+      tile.row === 0 ? "top" : tile.row === side - 1 ? "bottom" : tile.col === 0 ? "left" : "right";
+    tileEl.dataset.edge = edge;
 
     if (tile.type === "start") {
       tileEl.className = "tile tile--start";
@@ -473,17 +482,32 @@ function showFxBurst(kind, opts = {}) {
     }).join("");
     layer.innerHTML = `<div class="fx-ring"></div><div class="fx-emoji">🎉</div><div class="fx-text">${text}</div><div class="fx-confetti">${confetti}</div>`;
   } else {
-    layer.innerHTML = `<div class="fx-flash"></div><div class="fx-emoji">💸</div><div class="fx-text">${text}</div>`;
+    // 통행료: 요란한 경보 연출 (재미 포인트!)
+    const coins = Array.from({ length: 16 }, () => {
+      return `<i style="--x:${(Math.random() * 100).toFixed(0)}%;--d:${(Math.random() * 0.4).toFixed(2)}s;--s:${(0.6 + Math.random() * 1).toFixed(2)}"></i>`;
+    }).join("");
+    layer.innerHTML =
+      `<div class="fx-siren"></div>` +
+      `<div class="fx-flash"></div>` +
+      `<div class="fx-emoji fx-emoji--rent">💸</div>` +
+      `<div class="fx-text">${text}</div>` +
+      `<div class="fx-coindrop">${coins}</div>`;
   }
   layer.classList.remove("hidden");
-  setTimeout(done, reduced ? 250 : kind === "buy" ? 1150 : 950);
+  setTimeout(done, reduced ? 250 : kind === "buy" ? 1150 : 1450);
 }
 
 /* ---------------------------------------------------------
    퀴즈 모달 HTML (보기 버튼은 data-choice-index 로 식별)
 --------------------------------------------------------- */
 function buildQuizModalHTML(quiz, subtitle) {
+  const country =
+    quiz && quiz.countryId && window.getCountryById ? getCountryById(quiz.countryId) : null;
+  const flagHTML = country
+    ? `<div class="quiz-flag ${quiz.type === "flag" ? "quiz-flag--big" : ""}">${flagMarkup(country, "flag--quiz")}</div>`
+    : "";
   return `
+    ${flagHTML}
     <h3 class="modal-title">${escapeHtml(quiz.prompt)}</h3>
     ${subtitle ? `<p class="modal-message" style="font-size:0.9rem;opacity:0.75">${escapeHtml(subtitle)}</p>` : ""}
     <div class="quiz-choices">

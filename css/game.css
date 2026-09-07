@@ -497,34 +497,110 @@
   100% { transform: translateY(115vh) rotate(calc(var(--r) + 540deg)); opacity: 0.8; }
 }
 
-/* 통행료: 붉은 섬광 + 화면 흔들림 */
-.fx-rent { animation: fx-shake 0.5s ease-in-out; }
+/* 통행료: 붉은 섬광 + 경보 줄무늬 + 화면 흔들림 + 동전 폭우 */
+.fx-rent { animation: fx-shake 0.55s ease-in-out 2; }
 .fx-rent .fx-flash {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 45%, rgba(255, 90, 90, 0.55) 0%, rgba(255, 90, 90, 0) 65%);
-  animation: fx-flash 0.9s ease-out forwards;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 70, 70, 0.62) 0%, rgba(255, 70, 70, 0) 68%);
+  animation: fx-flash 1.4s ease-out forwards;
+}
+.fx-rent .fx-siren {
+  position: absolute;
+  inset: -25%;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 55, 55, 0.24) 0 44px,
+    rgba(255, 201, 77, 0.18) 44px 88px
+  );
+  animation: fx-siren-move 0.55s linear infinite, fx-flash 1.4s ease-out forwards;
+}
+@keyframes fx-siren-move {
+  to { transform: translateX(124px); }
+}
+.fx-emoji--rent {
+  animation: fx-emoji-pop 0.5s cubic-bezier(0.2, 1.8, 0.4, 1),
+    fx-emoji-wobble 0.28s ease-in-out 0.5s 4;
+}
+@keyframes fx-emoji-wobble {
+  0%, 100% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-12deg) scale(1.08); }
+  75% { transform: rotate(12deg) scale(1.08); }
+}
+.fx-coindrop {
+  position: absolute;
+  inset: 0;
+}
+.fx-coindrop i {
+  position: absolute;
+  left: var(--x);
+  top: -8%;
+  width: 3.4vmin;
+  height: 3.4vmin;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe98a 0%, #f5b301 70%);
+  box-shadow: 0 0 0 0.4vmin rgba(150, 100, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  transform: scale(var(--s));
+  animation: fx-coin-fall 1s ease-in var(--d) forwards;
+}
+@keyframes fx-coin-fall {
+  0% { transform: translateY(0) scale(var(--s)); opacity: 1; }
+  100% { transform: translateY(122vh) scale(var(--s)); opacity: 0.65; }
 }
 @keyframes fx-flash {
   0% { opacity: 0; }
-  15% { opacity: 1; }
+  12% { opacity: 1; }
+  40% { opacity: 0.5; }
+  60% { opacity: 0.85; }
   100% { opacity: 0; }
 }
 @keyframes fx-shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-12px); }
-  40% { transform: translateX(10px); }
-  60% { transform: translateX(-8px); }
-  80% { transform: translateX(5px); }
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-18px, 4px); }
+  30% { transform: translate(16px, -5px); }
+  45% { transform: translate(-13px, 3px); }
+  60% { transform: translate(10px, -3px); }
+  80% { transform: translate(-6px, 2px); }
 }
 .fx-rent .fx-text { -webkit-text-stroke-color: #7a1f1f; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fx-emoji, .fx-text, .fx-buy .fx-ring, .fx-confetti i, .fx-rent, .fx-rent .fx-flash { animation: none; }
-  .fx-confetti { display: none; }
+  .fx-emoji, .fx-emoji--rent, .fx-text, .fx-buy .fx-ring, .fx-confetti i,
+  .fx-rent, .fx-rent .fx-flash, .fx-rent .fx-siren, .fx-coindrop i { animation: none; }
+  .fx-confetti, .fx-coindrop, .fx-rent .fx-siren { display: none; }
+}
+
+/* 통행료 카드: 터치로 넘어가라는 안내 버튼 */
+.modal-tap-hint {
+  background: #fff6e0;
+  color: var(--navy);
+  border: 2px dashed var(--sun);
+  animation: tap-hint-pulse 1.3s ease-in-out infinite;
+}
+@keyframes tap-hint-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
 }
 
 /* ---------- 퀴즈 ---------- */
+.quiz-flag {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+.quiz-flag .flag--quiz {
+  width: 96px;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  box-shadow: 0 6px 0 rgba(31, 42, 68, 0.12), 0 12px 26px rgba(31, 42, 68, 0.28),
+    0 0 0 3px var(--white);
+}
+.quiz-flag--big .flag--quiz {
+  width: clamp(150px, 46vw, 240px);
+  border-radius: 10px;
+}
+.quiz-flag .flag--quiz .flag-emoji { font-size: 3.2rem; }
+
 .quiz-choices {
   display: flex;
   flex-direction: column;
