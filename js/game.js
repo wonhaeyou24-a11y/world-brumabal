@@ -5,10 +5,18 @@
  * 국가 데이터가 필요할 때는 반드시 country.js의 함수를 통해서만 참조한다.
  */
 
-const DEFAULT_START_MONEY = 1000;
+const DEFAULT_START_MONEY = 300; // 단위: 만원
 const DEFAULT_MAX_TURNS = 24;
+const PASS_START_BONUS = 46;     // 출발칸을 지날 때마다 받는 여행 자금 (만원)
 
 const PLAYER_COLORS = ["#FF7A59", "#3DBBFF", "#4CC97C", "#FFC94D"];
+
+/** 금액을 "300만원" 형태로 표시 */
+function won(n) {
+  return Math.round(n).toLocaleString("ko-KR") + "만원";
+}
+window.won = won;
+window.PASS_START_BONUS = PASS_START_BONUS;
 
 /** 새 게임 상태를 생성한다. playerConfigs: [{name, character}] */
 function createInitialGameState(playerConfigs, settings = {}) {

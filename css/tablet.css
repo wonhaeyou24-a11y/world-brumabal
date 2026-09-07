@@ -1,48 +1,51 @@
 /* ==========================================================
    tablet.css
-   아이패드(태블릿) 우선 레이아웃.
-   가로: 왼쪽 큰 게임판 + 오른쪽 정보 사이드바.
-   세로 태블릿: 게임판을 크게, 정보는 아래.
+   아이패드(태블릿)·PC 우선 레이아웃.
+   가로: 왼쪽 큰 게임판 + 오른쪽 정보 사이드바 (여백을 넉넉히 활용).
    ========================================================== */
 
-/* ---------- 가로 태블릿/데스크톱: 좌 게임판 · 우 사이드바 ---------- */
-@media (min-width: 880px) {
+/* ---------- 가로 태블릿/데스크톱 ---------- */
+@media (min-width: 900px) {
   #screen-game {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: clamp(16px, 3vw, 40px);
-    max-width: 1500px;
+    gap: clamp(20px, 3vw, 48px);
+    max-width: 1900px;
     min-height: 100vh;
     min-height: 100dvh;
-    padding: 16px 24px;
+    padding: 18px clamp(20px, 3vw, 60px);
   }
 
+  /* 게임판: 화면 높이의 92%까지, 폭도 사이드바(520px)를 뺀 만큼 최대한 크게 */
   #board-wrapper {
     flex: 0 0 auto;
-    width: min(82vh, 100vw - 460px);
-    height: min(82vh, 100vw - 460px);
-    max-width: 1000px;
-    max-height: 1000px;
+    width: min(92vh, 100vw - 540px);
+    height: min(92vh, 100vw - 540px);
+    max-width: 1100px;
+    max-height: 1100px;
     aspect-ratio: auto;
     margin: 0;
   }
 
+  /* 사이드바: 화면이 넓을수록 넓게 (남는 여백을 카드가 채우도록) */
   #game-side {
-    flex: 0 1 clamp(300px, 30vw, 420px);
+    flex: 1 1 auto;
+    max-width: clamp(360px, 34vw, 560px);
+    min-width: 340px;
     justify-content: center;
-    gap: 18px;
+    gap: clamp(14px, 2vh, 22px);
   }
 
   .game-topbar {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    padding: 16px 18px;
+    padding: 16px 20px;
     border-radius: var(--radius-lg);
   }
   .turn-indicator {
-    font-size: 1.5rem;
+    font-size: clamp(1.3rem, 2vw, 1.8rem);
     justify-content: center;
     text-align: center;
   }
@@ -57,83 +60,88 @@
   }
   .topbar-icon-btn { width: 46px; height: 46px; font-size: 1.35rem; }
 
+  /* 플레이어 카드: 사이드바가 넓으면 2열, 좁으면 1열. 세로 여백을 채운다 */
   .player-panel {
-    grid-template-columns: 1fr;
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 16px;
     overflow-y: auto;
-    max-height: 62vh;
+    max-height: 64vh;
+    padding-right: 2px;
   }
-  .player-chip {
-    border-radius: var(--radius-lg);
-    border-width: 4px;
-  }
-  .chip-main { padding: 14px 16px; gap: 14px; }
-  .player-chip .chip-name { font-size: 1.2rem; }
-  .player-chip .chip-money { font-size: 1.3rem; }
-  .chip-owned-count { font-size: 1rem; padding: 5px 12px; }
-  .owned-tab { font-size: 0.95rem; padding: 5px 10px 5px 7px; }
+  .player-card { border-width: 4px; }
+  .pc-main { padding: 16px; gap: 16px; }
+  .pc-tags { font-size: 0.9rem; }
+  .pc-money { font-size: 1.4rem; }
+  .pc-sub { font-size: 0.82rem; }
+  .pc-avatar-name { font-size: 0.78rem; padding: 3px 9px; }
+  .owned-tab { font-size: 0.95rem; padding: 6px 11px 6px 8px; }
   .owned-tab .owned-flag { font-size: 1.2rem; }
 
   .dice-area { gap: 14px; }
   .dice-btn {
-    width: clamp(130px, 16vw, 200px);
-    height: clamp(130px, 16vw, 200px);
+    width: clamp(130px, 15vw, 190px);
+    height: clamp(130px, 15vw, 190px);
     border-radius: 38px;
-    font-size: clamp(3.8rem, 8vw, 6rem);
+    font-size: clamp(3.6rem, 7vw, 5.4rem);
   }
   .dice-hint {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-family: "Jua", sans-serif;
     min-height: 1.4em;
+    color: var(--coral);
   }
 }
 
-/* ---------- 세로 태블릿: 게임판을 화면 폭 가득, 정보는 아래 넓게 ---------- */
+/* 아주 넓은 화면(24인치+): 판을 더 키우고 카드도 큼직하게 */
+@media (min-width: 1500px) {
+  #board-wrapper { width: min(94vh, 100vw - 640px); height: min(94vh, 100vw - 640px); }
+  #game-side { max-width: 620px; }
+  .pc-money { font-size: 1.6rem; }
+}
+
+/* ---------- 세로 태블릿 ---------- */
 @media (min-width: 700px) and (orientation: portrait) {
-  #screen-game {
-    max-width: 900px;
-    padding: 20px;
-    gap: 18px;
-  }
-  #board-wrapper { max-width: 760px; }
+  #screen-game { max-width: 920px; padding: 22px; gap: 18px; }
+  #board-wrapper { max-width: 820px; }
   .turn-indicator { font-size: 1.4rem; }
-  .player-panel { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-  .player-chip { padding: 14px 16px; }
-  .player-chip .chip-name { font-size: 1.05rem; }
-  .player-chip .chip-money { font-size: 1.15rem; }
-  .dice-btn { width: 130px; height: 130px; font-size: 3.8rem; }
-  .dice-hint { font-size: 1.15rem; }
+  .player-panel { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .pc-money { font-size: 1.35rem; }
+  .dice-btn { width: 140px; height: 140px; font-size: 4rem; }
+  .dice-hint { font-size: 1.2rem; }
 }
 
-/* ---------- 큰 화면에서 이벤트 모달도 크고 시원하게 ---------- */
+/* ---------- 큰 화면에서 모달/나라 카드도 크고 시원하게 ---------- */
 @media (min-width: 700px) {
   .modal-content {
-    max-width: 560px;
-    padding: 34px 34px 38px;
+    max-width: 620px;
+    padding: 34px 36px 40px;
     gap: 20px;
     border-radius: var(--radius-lg);
   }
-  .modal-flag { font-size: clamp(3.4rem, 9vw, 5.2rem); }
-  .modal-title { font-size: clamp(1.7rem, 4.5vw, 2.4rem); }
-  .modal-message { font-size: 1.3rem; line-height: 1.7; }
-  .modal-info-grid { gap: 14px; }
-  .modal-info-item { padding: 16px 12px; border-radius: var(--radius-md); }
-  .modal-info-label { font-size: 0.95rem; }
-  .modal-info-value { font-size: 1.5rem; margin-top: 4px; }
+  .modal-flag { font-size: clamp(3.4rem, 9vw, 5rem); }
+  .modal-title { font-size: clamp(1.6rem, 4vw, 2.2rem); }
+  .modal-message { font-size: 1.25rem; line-height: 1.7; }
   .modal-actions { gap: 14px; margin-top: 8px; }
-  .modal-actions .btn { min-height: 66px; font-size: 1.25rem; }
+  .modal-actions .btn { min-height: 64px; font-size: 1.2rem; }
   .modal-rent-row { font-size: 1.3rem; padding: 14px 18px; border-radius: var(--radius-md); }
-  .quiz-choice { min-height: 66px; font-size: 1.3rem; }
-  .quiz-cta { min-height: 58px; font-size: 1.15rem; }
+  .quiz-choice { min-height: 64px; font-size: 1.25rem; }
+  .quiz-cta { min-height: 56px; font-size: 1.1rem; }
+
+  .cc-title { font-size: 1.7rem; }
+  .cc-traveler { font-size: 1rem; }
+  .cc-body { gap: 20px; }
+  .landmark--card { min-width: 200px; border-radius: var(--radius-md); }
+  .cc-k { font-size: 0.95rem; }
+  .cc-v { font-size: 1.25rem; }
+  .cc-row { padding-bottom: 8px; }
 }
 
-/* ---------- 설정/도감 화면도 태블릿에서 시원하게 ---------- */
+/* ---------- 설정/도감 화면 ---------- */
 @media (min-width: 700px) {
-  .setup-card { max-width: 620px; padding: 32px 28px; gap: 22px; }
+  .setup-card { max-width: 640px; padding: 32px 28px; gap: 22px; }
   .setup-title { font-size: 1.9rem; }
   .collection-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
-  .collection-card { padding: 16px 12px; }
-  .collection-flag { font-size: 2.8rem; }
-  .collection-name { font-size: 1.2rem; }
-  .collection-capital { font-size: 0.95rem; }
+  .collection-card { padding: 10px; }
+  .collection-name { font-size: 1.1rem; }
+  .collection-capital { font-size: 0.85rem; }
 }

@@ -69,82 +69,119 @@
 .player-panel {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
   align-content: start;
 }
-.player-chip {
+
+/* ---------- 플레이어 카드 ---------- */
+.player-card {
   position: relative;
   background: var(--white);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-soft);
   border: 3px solid transparent;
   overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.player-chip.is-current {
-  border-color: var(--sun);
+.player-card.is-current {
+  border-color: var(--chip-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--chip-color) 40%, transparent), var(--shadow-soft);
 }
-.chip-main {
+.pc-main {
   width: 100%;
   background: transparent;
   border: none;
   padding: 10px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-align: left;
 }
-.player-chip .chip-face {
-  display: inline-flex;
+.pc-body { gap: 3px; }
+.pc-money { font-size: 1.05rem; }
+.pc-tags { font-size: 0.74rem; gap: 7px; }
+.pc-sub { font-size: 0.72rem; }
+.pc-avatar {
+  position: relative;
   flex-shrink: 0;
+  display: inline-flex;
 }
-.player-chip .chip-info {
-  min-width: 0;
-  flex: 1;
-}
-.player-chip .chip-name {
-  font-size: 0.9rem;
-  font-weight: bold;
+.pc-avatar .piece { --piece-color: var(--chip-color); }
+.pc-avatar-name {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  background: var(--chip-color);
+  color: var(--white);
+  font-family: "Jua", sans-serif;
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 999px;
   white-space: nowrap;
+  max-width: 120%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.player-chip .chip-money {
-  font-size: 0.95rem;
-  color: var(--sky-deep);
-  font-weight: bold;
+.pc-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.chip-owned-count {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-family: "Jua", sans-serif;
-  font-size: 0.85rem;
+.pc-tags {
+  display: flex;
+  gap: 8px;
+  font-size: 0.78rem;
   color: var(--navy);
-  background: var(--cream);
-  padding: 3px 8px;
-  border-radius: 999px;
+  opacity: 0.7;
 }
-.chip-owned-count .owned-caret { transition: transform 0.15s ease; }
-.player-chip.is-expanded .chip-owned-count .owned-caret { transform: rotate(180deg); }
+.pc-money {
+  font-family: "Jua", sans-serif;
+  font-size: 1.15rem;
+  color: var(--sky-deep);
+}
+.pc-sub {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.74rem;
+  opacity: 0.7;
+}
+.pc-status.on {
+  color: var(--coral);
+  font-weight: bold;
+  opacity: 1;
+}
+.pc-caret {
+  align-self: center;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+}
+.player-card.is-expanded .pc-caret { transform: rotate(180deg); }
 
 /* 파일철처럼 펼쳐지는 보유 국가 목록 */
 .owned-folder {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  padding: 0 10px;
+  padding: 0 12px;
   max-height: 0;
   opacity: 0;
   overflow: hidden;
   transition: max-height 0.22s ease, opacity 0.22s ease, padding 0.22s ease;
-  background: color-mix(in srgb, var(--chip-color) 10%, white);
+  background: color-mix(in srgb, var(--chip-color) 12%, white);
 }
-.player-chip.is-expanded .owned-folder {
-  max-height: 60vh;
+.player-card.is-expanded .owned-folder {
+  max-height: 50vh;
   opacity: 1;
-  padding: 8px 10px 10px;
+  padding: 10px 12px 12px;
+  overflow-y: auto;
 }
 .owned-tab {
   display: inline-flex;
@@ -153,8 +190,8 @@
   background: var(--white);
   border-left: 4px solid var(--chip-color);
   border-radius: 4px 10px 10px 4px;
-  padding: 4px 8px 4px 6px;
-  font-size: 0.8rem;
+  padding: 5px 9px 5px 7px;
+  font-size: 0.82rem;
   box-shadow: 0 1px 2px rgba(31, 42, 68, 0.14);
   max-width: 100%;
 }
@@ -167,7 +204,7 @@
 }
 .owned-empty {
   padding: 6px 0;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   opacity: 0.55;
 }
 .money-flash {
@@ -320,6 +357,75 @@
 }
 .modal-rent-row.negative { color: var(--coral); }
 .modal-rent-row.positive { color: var(--grass); }
+
+/* ---------- 나라 카드 (랜드마크 사진 포함) ---------- */
+.landmark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #dbeafe;
+  flex-shrink: 0;
+}
+.landmark-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.landmark-photo.is-missing { display: none; }
+.landmark-flag { display: none; font-size: 2.4rem; }
+.landmark-photo.is-missing ~ .landmark-flag { display: block; }
+
+.landmark--card {
+  width: 40%;
+  min-width: 130px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 3px 8px rgba(31, 42, 68, 0.18);
+}
+
+.cc-head { text-align: center; }
+.cc-title {
+  font-family: "Jua", sans-serif;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+.cc-traveler {
+  font-size: 0.85rem;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+.cc-body {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+.cc-rows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+.cc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px dashed rgba(31, 42, 68, 0.15);
+  padding-bottom: 5px;
+}
+.cc-row:last-child { border-bottom: none; }
+.cc-k { font-size: 0.82rem; opacity: 0.6; white-space: nowrap; }
+.cc-v {
+  font-family: "Jua", sans-serif;
+  font-size: 1rem;
+  text-align: right;
+}
+.cc-v.money { color: var(--coral); }
 
 /* ---------- 퀴즈 ---------- */
 .quiz-choices {

@@ -155,20 +155,20 @@ function buildBoardDOMOnce(gameState) {
 
     if (tile.type === "start") {
       tileEl.className = "tile tile--start";
-      tileEl.innerHTML = `<div class="tile-flag">🚩</div><div class="tile-name">출발</div>`;
+      tileEl.innerHTML = `<div class="tile-icon">🚩</div><div class="tile-name">출발</div>`;
     } else if (tile.type === "rest") {
       tileEl.className = "tile tile--rest";
-      tileEl.innerHTML = `<div class="tile-flag">☕</div><div class="tile-name">쉼터</div>`;
+      tileEl.innerHTML = `<div class="tile-icon">🍔</div><div class="tile-name">쉼터</div>`;
     } else if (tile.type === "event") {
       tileEl.className = "tile tile--event";
-      tileEl.innerHTML = `<div class="tile-flag">❓</div><div class="tile-name">찬스</div>`;
+      tileEl.innerHTML = `<div class="tile-icon">🗝️</div><div class="tile-name">황금열쇠</div>`;
     } else {
       const c = getCountryById(tile.countryId);
       tileEl.className = "tile tile--country";
       tileEl.innerHTML = `
         <div class="tile-flag">${c.flag}</div>
         <div class="tile-name">${c.nameKo}</div>
-        <div class="tile-price">💰${c.price}</div>
+        <div class="tile-capital">${c.capitalKo}</div>
         <div class="tile-owner-bar" data-owner-bar></div>
       `;
     }
@@ -271,19 +271,26 @@ function renderPlayerPanel(gameState) {
       const isCurrent = i === gameState.currentPlayerIndex;
       const count = p.ownedCountries.length;
       const expanded = expandedPlayers.has(p.id);
+      const status = isCurrent ? "내 차례!" : "여행 중";
       return `
-        <div class="player-chip ${isCurrent ? "is-current" : ""} ${expanded ? "is-expanded" : ""}"
-             data-player-id="${p.id}" style="--chip-color:${p.color};border-color:${isCurrent ? p.color : "transparent"}">
-          <button type="button" class="chip-main" data-action="toggle-owned" data-player-id="${p.id}">
-            <span class="chip-face">${pieceMarkup(playerPiece(p), "md")}</span>
-            <div class="chip-info">
-              <div class="chip-name">${escapeHtml(p.name)}${p.isAI ? " 🤖" : ""}</div>
-              <div class="chip-money">💰${p.money}</div>
-            </div>
-            <span class="chip-owned-count" aria-label="보유 국가 ${count}개">
-              <span class="owned-num">🚩 ${count}</span>
-              <span class="owned-caret">▾</span>
+        <div class="player-card ${isCurrent ? "is-current" : ""} ${expanded ? "is-expanded" : ""}"
+             data-player-id="${p.id}" style="--chip-color:${p.color}">
+          <button type="button" class="pc-main" data-action="toggle-owned" data-player-id="${p.id}">
+            <span class="pc-avatar">
+              ${pieceMarkup(playerPiece(p), "lg")}
+              <span class="pc-avatar-name">${escapeHtml(p.name)}</span>
             </span>
+            <div class="pc-body">
+              <div class="pc-tags">
+                <span>🚩 ${count}</span><span>🏨 0</span><span>🏝️ 0</span>
+              </div>
+              <div class="pc-money">💰 ${won(p.money)}</div>
+              <div class="pc-sub">
+                <span>🎴 스페셜 0</span>
+                <span class="pc-status ${isCurrent ? "on" : ""}">${p.isAI ? "🤖 " : ""}${status}</span>
+              </div>
+            </div>
+            <span class="pc-caret">▾</span>
           </button>
           ${ownedFolderHTML(p)}
         </div>
@@ -298,16 +305,16 @@ function togglePlayerOwned(playerId) {
   if (window.gameState) renderPlayerPanel(window.gameState);
 }
 
-/** 플레이어 칩 위에 +💰50 / -💰40 같은 뱃지를 잠깐 띄운다 */
+/** 플레이어 카드 위에 +46만원 / -12만원 같은 뱃지를 잠깐 띄운다 */
 function flashMoney(playerId, delta) {
   if (!delta) return;
-  const chip = document.querySelector(`.player-chip[data-player-id="${playerId}"]`);
-  if (!chip) return;
+  const card = document.querySelector(`.player-card[data-player-id="${playerId}"]`);
+  if (!card) return;
   const badge = document.createElement("span");
   badge.className = "money-flash " + (delta >= 0 ? "gain" : "loss");
-  badge.textContent = `${delta >= 0 ? "+" : "-"}💰${Math.abs(delta)}`;
-  chip.appendChild(badge);
-  setTimeout(() => badge.remove(), 1100);
+  badge.textContent = `${delta >= 0 ? "+" : "-"}${won(Math.abs(delta))}`;
+  card.appendChild(badge);
+  setTimeout(() => badge.remove(), 1200);
 }
 
 function renderTopbar(gameState) {
@@ -350,9 +357,9 @@ function renderResultScreen(gameState) {
         <span class="result-piece">${pieceMarkup(playerPiece(r.player), "lg")}</span>
         <div style="flex:1">
           <div class="result-name">${escapeHtml(r.player.name)}</div>
-          <div class="result-detail">보유 국가 ${r.countryCount}개 · 현금 💰${r.cash}</div>
+          <div class="result-detail">보유 국가 ${r.countryCount}개 · 현금 ${won(r.cash)}</div>
         </div>
-        <div class="result-detail" style="font-weight:bold;color:var(--sky-deep)">총 💰${r.netWorth}</div>
+        <div class="result-detail" style="font-weight:bold;color:var(--sky-deep)">총 ${won(r.netWorth)}</div>
       </div>
     `
     )
@@ -387,7 +394,7 @@ function renderCollectionScreen(gameState) {
       if (!visited.has(c.id)) {
         return `
           <div class="collection-card is-locked">
-            <div class="collection-flag">❓</div>
+            <div class="collection-photo">❓</div>
             <div class="collection-name">???</div>
             <div class="collection-capital">아직 안 가봤어요</div>
           </div>`;
@@ -395,13 +402,54 @@ function renderCollectionScreen(gameState) {
       const times = log[c.id] ? ` · ${log[c.id]}번 방문` : "";
       return `
         <div class="collection-card is-visited">
-          <div class="collection-flag">${c.flag}</div>
-          <div class="collection-name">${escapeHtml(c.nameKo)}</div>
-          <div class="collection-capital">🏙️ ${escapeHtml(c.capitalKo)}</div>
+          <div class="collection-photo">${landmarkImgHTML(c)}</div>
+          <div class="collection-name">${c.flag} ${escapeHtml(c.nameKo)}</div>
+          <div class="collection-capital">🏙️ ${escapeHtml(c.capitalKo)} · ${escapeHtml(c.landmarkKo)}</div>
           <div class="collection-meta">${escapeHtml(c.continent)}${times}</div>
         </div>`;
     })
     .join("");
+}
+
+/* ---------------------------------------------------------
+   나라 카드 (도착·통행료·소유 모달에서 공통 사용) — 랜드마크 사진 포함
+--------------------------------------------------------- */
+function landmarkImgHTML(country, extraClass) {
+  return `<span class="landmark ${extraClass || ""}">
+    <img class="landmark-photo" src="${country.landmarkImg}" alt="${escapeHtml(country.landmarkKo)}"
+         loading="lazy" onerror="this.classList.add('is-missing')" />
+    <span class="landmark-flag">${country.flag}</span>
+  </span>`;
+}
+
+/**
+ * opts: { travelerName, ownerName, myMoney, price, rent, priceLabelHTML }
+ */
+function buildCountryCard(country, opts = {}) {
+  const rows = [];
+  rows.push(["🏙️ 도시", country.capitalKo]);
+  rows.push(["🌍 대륙", country.continent]);
+  if ("ownerName" in opts) rows.push(["👑 소유자", opts.ownerName || "--"]);
+  if ("myMoney" in opts) rows.push(["💰 나의 자금", won(opts.myMoney), "money"]);
+  if ("price" in opts) rows.push(["🏷️ 가격", opts.priceLabelHTML || won(opts.price), "raw"]);
+  if ("rent" in opts) rows.push(["🚉 통행료", won(opts.rent)]);
+
+  const rowsHTML = rows
+    .map(([k, v, cls]) => {
+      const val = cls === "raw" ? v : escapeHtml(String(v));
+      return `<div class="cc-row"><span class="cc-k">${k}</span><span class="cc-v ${cls || ""}">${val}</span></div>`;
+    })
+    .join("");
+
+  return `
+    <div class="cc-head">
+      <div class="cc-title">[${escapeHtml(country.nameKo)}] ${escapeHtml(country.landmarkKo)}</div>
+      ${opts.travelerName ? `<div class="cc-traveler">현재 여행자: ${escapeHtml(opts.travelerName)}</div>` : ""}
+    </div>
+    <div class="cc-body">
+      ${landmarkImgHTML(country, "landmark--card")}
+      <div class="cc-rows">${rowsHTML}</div>
+    </div>`;
 }
 
 /* ---------------------------------------------------------
@@ -444,5 +492,7 @@ window.togglePlayerOwned = togglePlayerOwned;
 window.renderResultScreen = renderResultScreen;
 window.renderCollectionScreen = renderCollectionScreen;
 window.buildQuizModalHTML = buildQuizModalHTML;
+window.buildCountryCard = buildCountryCard;
+window.landmarkImgHTML = landmarkImgHTML;
 window.flashMoney = flashMoney;
 window.getBoardTiles = () => currentBoardTiles;

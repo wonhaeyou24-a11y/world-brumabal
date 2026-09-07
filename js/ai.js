@@ -5,7 +5,7 @@
  */
 
 const AI_CONFIG = {
-  cashReserve: 150,      // 이만큼은 남기고 국가를 산다
+  cashReserve: 55,       // 이만큼(만원)은 남기고 국가를 산다
   quizCorrectRate: 0.6,  // AI가 퀴즈 정답을 맞히는 확률
   tryPurchaseQuizRate: 0.5, // 국가 도착 시 할인 퀴즈에 도전할 확률
 };

@@ -4,7 +4,7 @@
  * CACHE_VERSION을 올리면 이전 캐시를 지우고 새 리소스로 교체한다(업데이트 안 되는 문제 방지).
  */
 
-const CACHE_VERSION = "world-brumabal-v10";
+const CACHE_VERSION = "world-brumabal-v11";
 
 const CORE_ASSETS = [
   "./",
@@ -44,8 +44,15 @@ const CORE_ASSETS = [
   "./assets/intro/intro-poster.jpg",
 ];
 
-// 설치 시점에 필수는 아니지만 있으면 캐시해 두는 것(용량 큰 영상 등) — 실패해도 설치는 계속
-const EXTRA_ASSETS = ["./assets/intro/intro.mp4"];
+// 설치 시점에 필수는 아니지만 있으면 캐시해 두는 것(영상·랜드마크 사진) — 실패해도 설치는 계속
+const LANDMARK_IDS = [
+  "KR","JP","CN","IN","TH","VN","SG","AE","SA","GB","FR","DE","IT","ES","NL","CH",
+  "SE","GR","RU","US","CA","MX","BR","AR","PE","CL","EG","ZA","KE","MA","AU","NZ",
+];
+const EXTRA_ASSETS = [
+  "./assets/intro/intro.mp4",
+  ...LANDMARK_IDS.map((id) => `./assets/landmarks/${id}.jpg`),
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

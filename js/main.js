@@ -7,7 +7,7 @@
 
 window.gameState = null;
 let selectedPlayerCount = 2;
-let selectedStartMoney = 1000;
+let selectedStartMoney = 300;
 let selectedMaxTurns = 24;
 let collectionReturnScreen = "screen-start"; // 도감에서 "뒤로" 눌렀을 때 돌아갈 화면
 
@@ -153,6 +153,19 @@ function bindGameScreen() {
     showSettingsModal();
   });
 
+  document.getElementById("btn-exit-game").addEventListener("click", () => {
+    if (isModalOpen()) return;
+    showModal(`
+      <div class="modal-flag">🏠</div>
+      <h3 class="modal-title">처음 화면으로 갈까요?</h3>
+      <p class="modal-message">지금까지 한 게임은 저장돼요.<br>처음 화면에서 <b>이어하기</b>로 다시 할 수 있어요.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" data-action="close-modal">계속하기</button>
+        <button class="btn btn-primary" data-action="exit-to-start">처음으로</button>
+      </div>
+    `);
+  });
+
   document.getElementById("player-panel").addEventListener("click", (e) => {
     const btn = e.target.closest('[data-action="toggle-owned"]');
     if (btn) togglePlayerOwned(Number(btn.dataset.playerId));
@@ -178,6 +191,13 @@ function bindGameScreen() {
       handleQuizAnswer(Number(btn.dataset.choiceIndex));
     } else if (action === "quiz-result-to-arrival") {
       showArrivalCard();
+    } else if (action === "exit-to-start") {
+      const gs = window.gameState;
+      if (gs) saveGame(gs);
+      hideModal();
+      window.gameState = null;
+      showScreen("screen-start");
+      refreshContinueButton();
     } else if (action === "toggle-sound") {
       const next = saveSettings({ soundOn: !loadSettings().soundOn });
       if (next.soundOn && window.unlockAudio) { window.unlockAudio(); window.playSound && window.playSound("coinGain"); }
@@ -239,13 +259,26 @@ function onDiceClick() {
   });
 }
 
+/** 출발칸을 지났으면(또는 밟았으면) 여행 자금을 지급한다 */
+function grantPassStartBonus(gs, player, oldPos, steps) {
+  const bonus = window.PASS_START_BONUS ?? 46;
+  if (oldPos + steps >= gs.boardLength) {
+    player.money += bonus;
+    renderPlayerPanel(gs);
+    if (window.flashMoney) flashMoney(player.id, bonus);
+    if (window.playSound) window.playSound("coinGain");
+  }
+}
+
 function animateMove(steps) {
   const gs = window.gameState;
   const player = getCurrentPlayer(gs);
   const boardLength = gs.boardLength;
+  const oldPos = player.position;
 
   if (window.prefersReducedAnim && window.prefersReducedAnim()) {
     player.position = (player.position + steps) % boardLength;
+    grantPassStartBonus(gs, player, oldPos, steps);
     renderBoardDynamic(gs, { landed: true });
     setTimeout(() => handleArrival(), 200);
     return;
@@ -260,6 +293,7 @@ function animateMove(steps) {
     if (window.playSound) window.playSound(last ? "land" : "move");
     if (last) {
       clearInterval(stepInterval);
+      grantPassStartBonus(gs, player, oldPos, steps);
       setTimeout(() => handleArrival(), 380);
     }
   }, 300);
@@ -276,8 +310,9 @@ function handleArrival() {
 
   if (tile.type === "start") {
     showModal(`
-      <h3 class="modal-title">🚩 출발지</h3>
-      <p class="modal-message">출발지를 한 바퀴 돌았어요!</p>
+      <div class="modal-flag">🚩</div>
+      <h3 class="modal-title">출발!</h3>
+      <p class="modal-message">출발칸을 밟았어요.<br>여행 자금 <b>${won(window.PASS_START_BONUS ?? 46)}</b>을 받았어요!</p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -287,8 +322,9 @@ function handleArrival() {
 
   if (tile.type === "rest") {
     showModal(`
-      <h3 class="modal-title">☕ 쉼터</h3>
-      <p class="modal-message">잠시 쉬어가는 칸이에요.</p>
+      <div class="modal-flag">🍔</div>
+      <h3 class="modal-title">쉼터</h3>
+      <p class="modal-message">햄버거랑 음료 한 잔 하고<br>잠시 쉬어가요 😋</p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -311,8 +347,7 @@ function handleArrival() {
     showArrivalCard();
   } else if (ownerId === player.id) {
     showModal(`
-      <div class="modal-flag">${country.flag}</div>
-      <h3 class="modal-title">${country.nameKo}</h3>
+      ${buildCountryCard(country, { travelerName: player.name, ownerName: `${player.name}(나)` })}
       <p class="modal-message">이미 내가 가진 나라예요! 🏠</p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
@@ -325,11 +360,9 @@ function handleArrival() {
     if (window.flashMoney) { flashMoney(player.id, -result.amount); flashMoney(owner.id, result.amount); }
     if (window.playSound) window.playSound("coinLoss");
     showModal(`
-      <div class="modal-flag">${country.flag}</div>
-      <h3 class="modal-title">${country.nameKo}</h3>
-      <p class="modal-message">${pcMarkup(owner)} ${escapeAttr(owner.name)}의 나라예요.</p>
-      <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-💰${result.amount}</span></div>
-      <div class="modal-rent-row positive"><span>${pcMarkup(owner)} ${escapeAttr(owner.name)}</span><span>+💰${result.amount}</span></div>
+      ${buildCountryCard(country, { travelerName: player.name, ownerName: owner.name, myMoney: player.money })}
+      <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-${won(result.amount)}</span></div>
+      <div class="modal-rent-row positive"><span>${pcMarkup(owner)} ${escapeAttr(owner.name)}</span><span>+${won(result.amount)}</span></div>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -346,19 +379,19 @@ function showArrivalCard() {
   const affordable = player.money >= price;
   const discounted = pendingArrival.discountRate > 0;
 
-  const priceLine = discounted
-    ? `<span style="text-decoration:line-through;opacity:0.5">${country.price}</span> <b style="color:var(--coral)">${price}</b>`
-    : `${price}`;
+  const priceLabelHTML = discounted
+    ? `<span style="text-decoration:line-through;opacity:0.5">${won(country.price)}</span> <b style="color:var(--coral)">${won(price)}</b>`
+    : won(price);
 
   showModal(`
-    <div class="modal-flag">${country.flag}</div>
-    <h3 class="modal-title">${country.nameKo}</h3>
-    <div class="modal-info-grid">
-      <div class="modal-info-item"><div class="modal-info-label">🏙️ 수도</div><div class="modal-info-value">${country.capitalKo}</div></div>
-      <div class="modal-info-item"><div class="modal-info-label">🌍 대륙</div><div class="modal-info-value">${country.continent}</div></div>
-      <div class="modal-info-item"><div class="modal-info-label">💰 구매가격</div><div class="modal-info-value">${priceLine}</div></div>
-      <div class="modal-info-item"><div class="modal-info-label">💰 통행료</div><div class="modal-info-value">${country.rent}</div></div>
-    </div>
+    ${buildCountryCard(country, {
+      travelerName: player.name,
+      ownerName: "",
+      myMoney: player.money,
+      price,
+      priceLabelHTML,
+      rent: country.rent,
+    })}
     ${
       pendingArrival.quizDone
         ? ""
@@ -403,10 +436,10 @@ function handleEventTile() {
     if (window.flashMoney) flashMoney(player.id, res.delta);
     if (window.playSound) window.playSound(res.delta >= 0 ? "coinGain" : "coinLoss");
     const sign = res.delta >= 0 ? "positive" : "negative";
-    const amountText = `${res.delta >= 0 ? "+" : "-"}💰${Math.abs(res.delta)}`;
+    const amountText = `${res.delta >= 0 ? "+" : "-"}${won(Math.abs(res.delta))}`;
     showModal(`
       <div class="modal-flag">${card.emoji}</div>
-      <h3 class="modal-title">${card.title}</h3>
+      <h3 class="modal-title">🗝️ ${card.title}</h3>
       <div class="modal-rent-row ${sign}"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>${amountText}</span></div>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
@@ -420,9 +453,9 @@ function handleEventTile() {
     pendingQuiz = { quiz, context: "event" };
     const reward = window.QUIZ_CONFIG?.eventReward ?? 100;
     showModal(`
-      <div class="modal-flag">${card.emoji}</div>
+      <div class="modal-flag">🗝️</div>
       <h3 class="modal-title">${card.title}</h3>
-      ${buildQuizModalHTML(quiz, `맞히면 💰${reward}을 받아요`)}
+      ${buildQuizModalHTML(quiz, `맞히면 ${won(reward)}을 받아요`)}
     `);
     return;
   }
@@ -441,13 +474,8 @@ function handleEventTile() {
     saveGame(gs);
     const country = getCountryById(res.countryId);
     showModal(`
-      <div class="modal-flag">${card.emoji}</div>
-      <h3 class="modal-title">${card.title}</h3>
-      <p class="modal-message">${country.flag} <b>${country.nameKo}</b>(으)로 여행을 떠났어요!<br>도감에 기록됐어요 🧳</p>
-      <div class="modal-info-grid">
-        <div class="modal-info-item"><div class="modal-info-label">🏙️ 수도</div><div class="modal-info-value">${country.capitalKo}</div></div>
-        <div class="modal-info-item"><div class="modal-info-label">🌍 대륙</div><div class="modal-info-value">${country.continent}</div></div>
-      </div>
+      ${buildCountryCard(country, { travelerName: player.name })}
+      <p class="modal-message">✈️ <b>${country.nameKo}</b>(으)로 여행을 떠났어요!<br>도감에 기록됐어요 🧳</p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -502,7 +530,7 @@ function handleQuizAnswer(choiceIndex) {
       <div class="modal-flag">🎉</div>
       <h3 class="modal-title">정답이에요!</h3>
       <p class="modal-message">정답은 <b>${quiz.answer}</b>!</p>
-      <div class="modal-rent-row positive"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>+💰${res.reward}</span></div>
+      <div class="modal-rent-row positive"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>+${won(res.reward)}</span></div>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -538,9 +566,9 @@ function handleBuyDecision(wantsToBuy) {
       if (window.flashMoney) flashMoney(player.id, -getEffectivePrice(country, discountRate));
       if (window.playSound) window.playSound("buy");
       showModal(`
-        <div class="modal-flag">${country.flag}</div>
-        <h3 class="modal-title">구매 완료!</h3>
-        <p class="modal-message">${country.nameKo}이(가) 이제 내 나라예요 🎉</p>
+        ${buildCountryCard(country, { travelerName: player.name, ownerName: `${player.name}(나)`, myMoney: player.money })}
+        <h3 class="modal-title" style="color:var(--grass)">구매 완료! 🎉</h3>
+        <p class="modal-message">${country.nameKo}이(가) 이제 내 나라예요</p>
         <div class="modal-actions">
           <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
         </div>

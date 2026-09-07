@@ -9,8 +9,8 @@
  * (칸이 커지고, 판마다 여행지가 달라져 재미가 있다). 여행 도감에는 전체 국가가 다 나온다.
  */
 
-const EVENT_EVERY = 8;             // 국가 N개마다 이벤트(찬스) 칸 1개
-const BOARD_COUNTRY_TARGET = 36;   // 한 판에 게임판에 올릴 국가 수
+const EVENT_EVERY = 7;             // 국가 N개마다 황금열쇠 칸 1개
+const BOARD_COUNTRY_TARGET = 32;   // 한 판에 게임판에 올릴 국가 수
 
 const CONTINENT_ORDER = ["아시아", "유럽", "북아메리카", "남아메리카", "아프리카", "오세아니아"];
 
@@ -26,7 +26,9 @@ function _shuffled(arr) {
 /** 이번 판에 게임판에 올릴 국가 ID 목록을 고른다 (대륙 순서로 정렬해 반환) */
 function pickBoardCountryIds(target = BOARD_COUNTRY_TARGET) {
   const all = getAllCountries();
-  const chosen = all.length <= target ? [...all] : _shuffled(all).slice(0, target);
+  // 데이터가 target 이하면 전부 사용(정의 순서 유지), 많으면 무작위로 골라 대륙 순 정렬
+  if (all.length <= target) return all.map((c) => c.id);
+  const chosen = _shuffled(all).slice(0, target);
   chosen.sort(
     (a, b) =>
       CONTINENT_ORDER.indexOf(a.continent) - CONTINENT_ORDER.indexOf(b.continent) ||

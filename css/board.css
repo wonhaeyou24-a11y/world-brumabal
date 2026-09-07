@@ -134,46 +134,51 @@
 .tile > * { flex-shrink: 0; max-width: 100%; }
 
 .tile-flag {
-  font-size: clamp(0.8rem, 3.6cqmin, 2rem);
+  font-size: clamp(0.85rem, 3.9cqmin, 2.1rem);
   line-height: 1;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12));
+}
+.tile-icon {
+  font-size: clamp(1.1rem, 5cqmin, 2.8rem);
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.16));
 }
 .tile-name {
   font-family: "Jua", sans-serif;
   font-size: clamp(0.44rem, 1.95cqmin, 0.92rem);
   line-height: 1.05;
   color: var(--navy);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
-  word-break: keep-all;
+  text-overflow: ellipsis;
 }
-.tile-price {
-  font-size: clamp(0.4rem, 1.55cqmin, 0.74rem);
+.tile-capital {
+  font-size: clamp(0.38rem, 1.6cqmin, 0.74rem);
   color: var(--sky-deep);
-  font-weight: bold;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tile--start {
-  background: linear-gradient(160deg, #ffd873 0%, #ffc94d 100%);
+  background: linear-gradient(160deg, #ffe08a 0%, #ffc94d 100%);
 }
-.tile--start .tile-flag { font-size: clamp(1.1rem, 5.2cqmin, 3rem); }
+.tile--start .tile-name { color: #9a6300; }
 .tile--rest {
-  background: linear-gradient(160deg, #eef9ff 0%, #d7f0ff 100%);
+  background: linear-gradient(160deg, #ffe8d6 0%, #ffcfa8 100%);
 }
-.tile--rest .tile-flag { font-size: clamp(1rem, 4.4cqmin, 2.4rem); }
+.tile--rest .tile-name { color: #a2551f; }
 .tile--event {
-  background: linear-gradient(155deg, #fff0bf 0%, #ffd76a 100%);
+  background: linear-gradient(155deg, #fff1b8 0%, #ffcf3d 100%);
 }
-.tile--event .tile-name { color: #9a6300; }
-.tile--event .tile-flag {
-  font-size: clamp(1.1rem, 5cqmin, 2.8rem);
-  animation: chance-bounce 1.6s ease-in-out infinite;
+.tile--event .tile-name { color: #8a5a00; }
+.tile--event .tile-icon {
+  animation: key-wiggle 1.6s ease-in-out infinite;
 }
-@keyframes chance-bounce {
-  0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(-8%) rotate(4deg); }
+@keyframes key-wiggle {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50% { transform: translateY(-8%) rotate(10deg); }
 }
 
 /* 소유한 나라: 주인 색 테두리 + 살짝 채색 */
@@ -279,7 +284,7 @@
 
 @media (prefers-reduced-motion: reduce), (scripting: none) {
   .board-center .center-globe,
-  .tile--event .tile-flag,
+  .tile--event .tile-icon,
   .tile-token.is-current,
   .tile-token--hop,
   .tile--landing { animation: none; }

@@ -11,7 +11,7 @@
 
 const QUIZ_CONFIG = {
   choiceCount: 3,          // 보기 개수 (정답 1 + 오답 2)
-  eventReward: 100,        // 이벤트 칸 퀴즈 정답 시 받는 돈
+  eventReward: 15,         // 황금열쇠 퀴즈 정답 시 받는 돈 (만원)
   purchaseDiscountRate: 0.2, // 국가 도착 시 퀴즈 정답 → 구매가 할인율 (20%)
 };
 
