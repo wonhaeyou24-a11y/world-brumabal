@@ -9,6 +9,7 @@ window.gameState = null;
 let selectedPlayerCount = 2;
 let selectedStartMoney = 300;
 let selectedMaxTurns = 24;
+let selectedEndMode = "turns";
 let collectionReturnScreen = "screen-start"; // 도감에서 "뒤로" 눌렀을 때 돌아갈 화면
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -111,7 +112,10 @@ function bindSetupScreen() {
       rowEl.querySelectorAll(".option-chip").forEach((c) => c.classList.toggle("active", c === chip));
       const value = Number(chip.dataset.value);
       if (rowEl.dataset.group === "money") selectedStartMoney = value;
-      else if (rowEl.dataset.group === "turns") selectedMaxTurns = value;
+      else if (rowEl.dataset.group === "turns") {
+        selectedMaxTurns = value; // 0 = 파산까지
+        selectedEndMode = value === 0 ? "bankruptcy" : "turns";
+      }
     });
   });
 
@@ -125,6 +129,7 @@ function bindSetupScreen() {
     window.gameState = createInitialGameState(configs, {
       startMoney: selectedStartMoney,
       maxTurns: selectedMaxTurns,
+      endMode: selectedEndMode,
     });
     buildBoardDOMOnce(window.gameState);
     renderGameScreen(window.gameState);
@@ -238,6 +243,18 @@ function showSettingsModal() {
 let pendingArrival = null; // { countryId, discountRate, quizDone }
 let pendingQuiz = null;    // { quiz, context: "purchase" | "event" }
 let pendingEventCard = null;
+
+/** 일정 시간 뒤, "다음으로" 모달이 그대로 떠 있으면 자동으로 다음 차례로 넘긴다 */
+let autoAdvanceTimer = null;
+function autoAdvance(ms) {
+  clearTimeout(autoAdvanceTimer);
+  autoAdvanceTimer = setTimeout(() => {
+    const confirmBtn = document.querySelector('#modal-overlay [data-action="confirm-arrival"]');
+    if (isModalOpen() && confirmBtn && window.gameState && window.gameState.status === "playing") {
+      finishTurn();
+    }
+  }, ms);
+}
 
 /** 보유 국가 탭을 눌렀을 때 그 나라 카드를 보여준다 (게임 진행에는 영향 없음) */
 function showOwnedCountryCard(countryId) {
@@ -376,9 +393,25 @@ function handleArrival() {
   } else {
     const owner = gs.players.find((p) => p.id === ownerId);
     const result = payRentIfNeeded(gs, gs.players, player, tile.countryId);
+    renderBoardDynamic(gs);
     renderPlayerPanel(gs);
-    if (window.flashMoney) { flashMoney(player.id, -result.amount); flashMoney(owner.id, result.amount); }
+    if (window.flashMoney) flashMoney(owner.id, result.amount);
     if (window.playSound) window.playSound("rentImpact");
+
+    if (result.bankrupt) {
+      const bankruptHTML = `
+        <div class="modal-flag">💀</div>
+        <h3 class="modal-title">${escapeAttr(player.name)} 파산…</h3>
+        <p class="modal-message">${escapeAttr(owner.name)}의 <b>${escapeAttr(country.nameKo)}</b> 통행료 <b>${won(result.amount)}</b>을 못 냈어요.<br>가진 나라를 모두 내놓고 게임에서 빠집니다.</p>
+        <div class="modal-actions">
+          <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
+        </div>
+      `;
+      showFxBurst("rent", { text: `${player.name} 파산!`, onDone: () => showModal(bankruptHTML) });
+      return;
+    }
+
+    if (window.flashMoney) flashMoney(player.id, -result.amount);
     const rentModalHTML = `
       ${buildCountryCard(country, { travelerName: player.name, ownerName: owner.name, myMoney: player.money })}
       <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-${won(result.amount)}</span></div>
@@ -599,7 +632,10 @@ function handleBuyDecision(wantsToBuy) {
       `;
       showFxBurst("buy", {
         text: `${country.nameKo} 구입!`,
-        onDone: () => showModal(buyModalHTML),
+        onDone: () => {
+          showModal(buyModalHTML);
+          autoAdvance(2600); // 나라 카드를 잠깐 보여주고 자동으로 다음 차례로
+        },
       });
       return;
     }
@@ -613,6 +649,7 @@ function handleBuyDecision(wantsToBuy) {
 --------------------------------------------------------- */
 function finishTurn() {
   const gs = window.gameState;
+  clearTimeout(autoAdvanceTimer);
   hideModal();
   pendingArrival = null;
   pendingQuiz = null;

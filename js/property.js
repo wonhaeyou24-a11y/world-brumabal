@@ -34,27 +34,38 @@ function buyCountry(gameState, player, countryId, discountRate = 0) {
   return true;
 }
 
+/** 파산 처리: 소유 국가를 모두 은행으로 반환하고 파산 표시 */
+function bankruptPlayer(gameState, player) {
+  player.isBankrupt = true;
+  player.ownedCountries.forEach((id) => {
+    delete gameState.countryOwners[id];
+  });
+  player.ownedCountries = [];
+  player.money = 0;
+}
+
 /**
- * 통행료를 지급한다. (돈이 부족해도 게임이 멈추지 않도록 0 이하로는 내려가되 강제 진행)
- * 반환값: { ownerId, amount, payerRemaining, ownerRemaining } 또는 통행료 대상이 아니면 null
+ * 통행료를 지급한다.
+ * 반환: { ownerId, amount, bankrupt } (bankrupt=true면 낼 돈이 모자라 파산) 또는 통행료 대상이 아니면 null
  */
 function payRentIfNeeded(gameState, players, payer, countryId) {
   const ownerId = getCountryOwnerId(gameState, countryId);
-  if (ownerId === null || ownerId === payer.id) return null; // 무소유이거나 본인 소유면 통행료 없음
+  if (ownerId === null || ownerId === payer.id) return null;
 
   const country = getCountryById(countryId);
   const owner = players.find((p) => p.id === ownerId);
-  const amount = Math.min(country.rent, Math.max(payer.money, 0)); // 부족하면 가진 만큼만 지불 (파산 처리는 2차 개발)
+  const rent = country.rent;
 
-  payer.money -= amount;
-  owner.money += amount;
+  if (payer.money < rent) {
+    // 낼 돈이 모자람 → 가진 돈을 주인에게 넘기고 파산
+    owner.money += Math.max(payer.money, 0);
+    bankruptPlayer(gameState, payer);
+    return { ownerId, amount: rent, paid: owner.money, bankrupt: true };
+  }
 
-  return {
-    ownerId,
-    amount,
-    payerRemaining: payer.money,
-    ownerRemaining: owner.money,
-  };
+  payer.money -= rent;
+  owner.money += rent;
+  return { ownerId, amount: rent, bankrupt: false };
 }
 
 window.getCountryOwnerId = getCountryOwnerId;
@@ -62,3 +73,4 @@ window.getEffectivePrice = getEffectivePrice;
 window.canBuyCountry = canBuyCountry;
 window.buyCountry = buyCountry;
 window.payRentIfNeeded = payRentIfNeeded;
+window.bankruptPlayer = bankruptPlayer;

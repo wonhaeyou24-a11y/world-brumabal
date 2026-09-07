@@ -200,7 +200,7 @@ function renderBoardDynamic(gameState, opts = {}) {
       tileEl.classList.remove("tile--owned");
     } else {
       const owner = gameState.players.find((p) => p.id === ownerId);
-      bar.innerHTML = pieceMarkup(playerPiece(owner), "xs");
+      bar.innerHTML = `<span class="tile-owner-piece">${pieceMarkup(playerPiece(owner), "sm")}</span>`;
       tileEl.style.setProperty("--owner-color", owner.color);
       tileEl.classList.add("tile--owned");
     }
@@ -210,6 +210,7 @@ function renderBoardDynamic(gameState, opts = {}) {
   const current = getCurrentPlayer(gameState);
   document.querySelectorAll("[data-tokens]").forEach((el) => (el.innerHTML = ""));
   gameState.players.forEach((p) => {
+    if (p.isBankrupt) return; // 파산한 플레이어의 말은 보이지 않음
     const tile = currentBoardTiles[p.position % currentBoardTiles.length];
     const tileEl = document.querySelector(`.tile[data-index="${tile.index}"]`);
     if (!tileEl) return;
@@ -268,11 +269,11 @@ function renderPlayerPanel(gameState) {
   const panel = document.getElementById("player-panel");
   panel.innerHTML = gameState.players
     .map((p, i) => {
-      const isCurrent = i === gameState.currentPlayerIndex;
+      const isCurrent = i === gameState.currentPlayerIndex && !p.isBankrupt;
       const count = p.ownedCountries.length;
-      const status = isCurrent ? "내 차례!" : "여행 중";
+      const status = p.isBankrupt ? "💀 파산" : isCurrent ? "내 차례!" : "여행 중";
       return `
-        <div class="player-card ${isCurrent ? "is-current" : ""}"
+        <div class="player-card ${isCurrent ? "is-current" : ""} ${p.isBankrupt ? "is-bankrupt" : ""}"
              data-player-id="${p.id}" style="--chip-color:${p.color}">
           <div class="pc-main">
             <span class="pc-avatar">
@@ -286,12 +287,15 @@ function renderPlayerPanel(gameState) {
               <div class="pc-money">💰 ${won(p.money)}</div>
               <div class="pc-sub">
                 <span>🎴 스페셜 0</span>
-                <span class="pc-status ${isCurrent ? "on" : ""}">${status}</span>
+                <span class="pc-status ${isCurrent ? "on" : ""} ${p.isBankrupt ? "bankrupt" : ""}">${status}</span>
               </div>
             </div>
           </div>
-          <div class="pc-owned-label">보유 나라 ${count}개</div>
-          ${ownedFolderHTML(p)}
+          ${
+            p.isBankrupt
+              ? ""
+              : `<div class="pc-owned-label">보유 나라 ${count}개</div>${ownedFolderHTML(p)}`
+          }
         </div>
       `;
     })
@@ -334,14 +338,14 @@ function renderResultScreen(gameState) {
   list.innerHTML = results
     .map(
       (r, i) => `
-      <div class="result-row ${i === 0 ? "is-winner" : ""}">
-        <div class="result-rank">${medal[i] || i + 1}</div>
+      <div class="result-row ${i === 0 && !r.bankrupt ? "is-winner" : ""} ${r.bankrupt ? "is-bankrupt" : ""}">
+        <div class="result-rank">${r.bankrupt ? "💀" : medal[i] || i + 1}</div>
         <span class="result-piece">${pieceMarkup(playerPiece(r.player), "lg")}</span>
         <div style="flex:1">
           <div class="result-name">${escapeHtml(r.player.name)}</div>
-          <div class="result-detail">보유 국가 ${r.countryCount}개 · 현금 ${won(r.cash)}</div>
+          <div class="result-detail">${r.bankrupt ? "파산" : `보유 국가 ${r.countryCount}개 · 현금 ${won(r.cash)}`}</div>
         </div>
-        <div class="result-detail" style="font-weight:bold;color:var(--sky-deep)">총 ${won(r.netWorth)}</div>
+        <div class="result-detail" style="font-weight:bold;color:var(--sky-deep)">${r.bankrupt ? "" : "총 " + won(r.netWorth)}</div>
       </div>
     `
     )

@@ -18,10 +18,13 @@ function won(n) {
 window.won = won;
 window.PASS_START_BONUS = PASS_START_BONUS;
 
+const BANKRUPTCY_TURN_CAP = 60; // 파산 모드에서 무한 방지용 최대 턴
+
 /** 새 게임 상태를 생성한다. playerConfigs: [{name, character}] */
 function createInitialGameState(playerConfigs, settings = {}) {
   const startMoney = settings.startMoney ?? DEFAULT_START_MONEY;
-  const maxTurns = settings.maxTurns ?? DEFAULT_MAX_TURNS;
+  const endMode = settings.endMode === "bankruptcy" ? "bankruptcy" : "turns";
+  const maxTurns = endMode === "bankruptcy" ? BANKRUPTCY_TURN_CAP : settings.maxTurns ?? DEFAULT_MAX_TURNS;
 
   const players = playerConfigs.map((cfg, i) => {
     const piece = window.getPieceById ? window.getPieceById(cfg.pieceId) : null;
@@ -38,17 +41,22 @@ function createInitialGameState(playerConfigs, settings = {}) {
     currentPlayerIndex: 0,
     turn: 1,
     maxTurns,
+    endMode,                  // "turns" | "bankruptcy"
     boardLength: tiles.length,
     boardCountryIds,          // 이번 판 게임판에 올린 국가 (이어하기 시 동일 배치 재현)
     countryOwners: {},        // countryId -> playerId
     visitedCountries: {},     // playerId -> [countryId, ...]
-    settings: { startMoney, maxTurns },
+    settings: { startMoney, maxTurns, endMode },
     isMoving: false,          // 이동/애니메이션 중 다른 조작 방지 플래그
   };
 }
 
 function getCurrentPlayer(gameState) {
   return gameState.players[gameState.currentPlayerIndex];
+}
+
+function activePlayers(gameState) {
+  return gameState.players.filter((p) => !p.isBankrupt);
 }
 
 /** 국가 방문 기록 (여행 도감 기초 데이터, STEP11에서 화면 연결 예정) */
@@ -61,33 +69,47 @@ function recordVisit(gameState, playerId, countryId) {
   }
 }
 
-/** 다음 플레이어로 턴을 넘긴다. 한 바퀴(모든 플레이어 진행)가 끝나면 turn 증가 */
+/** 다음 (파산하지 않은) 플레이어로 턴을 넘긴다 */
 function advanceTurn(gameState) {
-  const nextIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
-  if (nextIndex === 0) {
-    gameState.turn += 1;
+  // 파산 모드: 살아있는 사람이 1명 이하면 종료
+  if (gameState.endMode === "bankruptcy" && activePlayers(gameState).length <= 1) {
+    gameState.status = "ended";
+    return;
   }
-  gameState.currentPlayerIndex = nextIndex;
+
+  const n = gameState.players.length;
+  let idx = gameState.currentPlayerIndex;
+  for (let step = 0; step < n; step++) {
+    idx = (idx + 1) % n;
+    if (idx === 0) gameState.turn += 1;
+    if (!gameState.players[idx].isBankrupt) break;
+  }
+  gameState.currentPlayerIndex = idx;
 
   if (gameState.turn > gameState.maxTurns) {
     gameState.status = "ended";
   }
+  if (gameState.endMode === "bankruptcy" && activePlayers(gameState).length <= 1) {
+    gameState.status = "ended";
+  }
 }
 
-/** 게임 결과를 순위대로 계산한다 */
+/** 게임 결과를 순위대로 계산한다 (파산자는 맨 뒤) */
 function computeFinalResults(gameState) {
   return [...gameState.players]
     .map((p) => ({
       player: p,
       cash: p.money,
       countryCount: p.ownedCountries.length,
-      netWorth: getPlayerNetWorth(p),
+      netWorth: p.isBankrupt ? -1 : getPlayerNetWorth(p),
+      bankrupt: !!p.isBankrupt,
     }))
     .sort((a, b) => b.netWorth - a.netWorth);
 }
 
 window.createInitialGameState = createInitialGameState;
 window.getCurrentPlayer = getCurrentPlayer;
+window.activePlayers = activePlayers;
 window.recordVisit = recordVisit;
 window.advanceTurn = advanceTurn;
 window.computeFinalResults = computeFinalResults;
