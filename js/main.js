@@ -500,12 +500,10 @@ function handleEventTile() {
     saveGame(gs);
     if (window.flashMoney) flashMoney(player.id, res.delta);
     if (window.playSound) window.playSound(res.delta >= 0 ? "coinGain" : "coinLoss");
-    const sign = res.delta >= 0 ? "positive" : "negative";
-    const amountText = `${res.delta >= 0 ? "+" : "-"}${won(Math.abs(res.delta))}`;
     showModal(`
       <div class="modal-flag">${card.emoji}</div>
       <h3 class="modal-title">🗝️ ${card.title}</h3>
-      <div class="modal-rent-row ${sign}"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>${amountText}</span></div>
+      ${prizeRow(player, res.delta)}
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -595,7 +593,7 @@ function handleQuizAnswer(choiceIndex) {
       <div class="modal-flag">🎉</div>
       <h3 class="modal-title">정답이에요!</h3>
       <p class="modal-message">정답은 <b>${quiz.answer}</b>!</p>
-      <div class="modal-rent-row positive"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>+${won(res.reward)}</span></div>
+      ${prizeRow(player, res.reward)}
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -787,6 +785,18 @@ function refreshContinueButton() {
 /** 모달 안에서 쓰는 작은 말 아이콘 */
 function pcMarkup(player) {
   return window.pieceMarkup ? pieceMarkup(playerPiece(player), "sm") : "";
+}
+
+/** 상금/벌금을 큰 원형 프로필 + 큰 색상 금액으로 보여주는 블록 */
+function prizeRow(player, delta) {
+  const gain = delta >= 0;
+  const avatar = window.pieceMarkup ? pieceMarkup(playerPiece(player), "lg") : "";
+  return `
+    <div class="modal-prize ${gain ? "is-gain" : "is-loss"}">
+      <span class="mp-avatar">${avatar}</span>
+      <span class="mp-name">${escapeAttr(player.name)}</span>
+      <span class="mp-amount">${gain ? "+" : "-"}${won(Math.abs(delta))}</span>
+    </div>`;
 }
 
 function isModalOpen() {
