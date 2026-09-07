@@ -1,42 +1,25 @@
 /**
  * intro.js
- * 시작 시 레고 인트로 영상을 재생하고, 끝나거나 화면을 터치하면 메인 화면으로 넘어간다.
- * 브라우저 자동재생 정책상 소리 있는 영상은 사용자 제스처가 필요하므로,
- * "눌러서 시작" 버튼을 한 번 누르면 소리와 함께 재생한다.
- * 한 번 본 뒤에는 바로 메인으로 가고, 시작 화면의 "인트로 다시보기"로 언제든 다시 볼 수 있다.
+ * 웹앱을 켜면 인트로 영상이 바로(음소거) 재생된다.
+ * 가운데 "🔊 소리 켜기" 버튼을 누르면 처음부터 소리와 함께 다시 재생된다.
+ * 재생 중 화면을 터치하면 영상을 건너뛰고 메인 화면으로 넘어간다.
+ * 영상이 끝나도 메인 화면으로 넘어간다.
  */
-
-const INTRO_SEEN_KEY = "worldBrumabal_introSeen_v2"; // 새 영상으로 교체 → 한 번씩 다시 보이도록
 
 document.addEventListener("DOMContentLoaded", () => {
   const screen = document.getElementById("screen-intro");
   const video = document.getElementById("intro-video");
-  const startBtn = document.getElementById("intro-start");
+  const soundBtn = document.getElementById("intro-sound");
   const skipBtn = document.getElementById("intro-skip");
   const startScreen = document.getElementById("screen-start");
   if (!screen || !video) return;
 
   let done = false;
-  let started = false;
-
-  const introSeen = (() => {
-    try {
-      return window.localStorage.getItem(INTRO_SEEN_KEY) === "1";
-    } catch (e) {
-      return false;
-    }
-  })();
-
-  function markSeen() {
-    try {
-      window.localStorage.setItem(INTRO_SEEN_KEY, "1");
-    } catch (e) {}
-  }
+  let soundOn = false;
 
   function goToStart() {
     if (done) return;
     done = true;
-    if (started) markSeen(); // 재생을 시작했으면(끝까지 보든 건너뛰든) 다음부터 생략
     try {
       video.pause();
     } catch (e) {}
@@ -45,11 +28,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (window.refreshContinueButton) window.refreshContinueButton();
   }
 
-  function beginPlayback() {
-    if (started) return;
-    started = true;
+  function enableSound() {
+    if (soundOn || done) return;
+    soundOn = true;
     if (window.unlockAudio) window.unlockAudio(); // 게임 효과음도 함께 잠금 해제
-    startBtn.classList.add("hidden");
+    soundBtn.classList.add("hidden");
     skipBtn.classList.remove("hidden");
     video.muted = false;
     try {
@@ -59,41 +42,27 @@ document.addEventListener("DOMContentLoaded", () => {
     if (p && typeof p.catch === "function") p.catch(() => goToStart());
   }
 
-  // 인트로를 처음 여는 함수 (시작 화면의 "다시보기" 버튼에서도 사용)
-  function openIntro() {
-    done = false;
-    started = false;
-    screen.classList.remove("hidden");
-    startBtn.classList.remove("hidden");
-    skipBtn.classList.add("hidden");
-    if (startScreen) startScreen.classList.add("hidden");
-  }
-  window.openIntro = openIntro;
-
-  const replayBtn = document.getElementById("btn-replay-intro");
-  if (replayBtn) {
-    replayBtn.addEventListener("click", () => {
-      openIntro();
-      beginPlayback(); // 버튼 클릭이 사용자 제스처이므로 소리와 함께 바로 재생
+  // 음소거 자동재생 시작 (HTML autoplay 속성 + 보강)
+  const first = video.play();
+  if (first && typeof first.catch === "function") {
+    first.catch(() => {
+      // 음소거 자동재생마저 막히면 소리 버튼이 재생 버튼 역할
+      soundBtn.querySelector(".intro-sound-text").textContent = "눌러서 재생";
     });
   }
 
-  startBtn.addEventListener("click", (e) => {
+  soundBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    beginPlayback();
+    enableSound();
   });
-  screen.addEventListener("click", () => {
-    if (started) goToStart();
-  });
+
+  // 재생 중 화면 아무 곳이나 터치하면 건너뛰기
+  screen.addEventListener("click", goToStart);
   skipBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     goToStart();
   });
+
   video.addEventListener("ended", goToStart);
   video.addEventListener("error", goToStart);
-
-  // 이미 한 번 봤으면 인트로를 건너뛰고 바로 시작 화면
-  if (introSeen) {
-    goToStart();
-  }
 });

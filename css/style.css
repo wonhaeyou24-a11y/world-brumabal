@@ -152,30 +152,31 @@ button:focus-visible,
   object-fit: cover;
   background: #000;
 }
-.intro-start-btn {
+/* 가운데 "소리 켜기" 버튼 */
+.intro-sound-btn {
   position: absolute;
   left: 50%;
-  bottom: 10%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 16px 32px;
-  border-radius: 999px;
-  background: var(--coral);
+  gap: 8px;
+  padding: 24px 30px;
+  border-radius: 28px;
+  background: rgba(255, 122, 89, 0.94);
   color: var(--white);
   font-family: "Jua", sans-serif;
-  font-size: 1.4rem;
+  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.3), 0 0 0 6px rgba(255, 255, 255, 0.25);
   white-space: nowrap;
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.28);
-  animation: intro-cta-pulse 1.3s ease-in-out infinite;
+  animation: intro-sound-pulse 1.2s ease-in-out infinite;
 }
-.intro-start-btn .intro-play {
-  font-size: 1.2rem;
-}
-@keyframes intro-cta-pulse {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.06); }
+.intro-sound-btn .intro-sound-icon { font-size: 2.6rem; line-height: 1; }
+.intro-sound-btn .intro-sound-text { font-size: 1.3rem; }
+.intro-sound-btn:active { transform: translate(-50%, -50%) scale(0.95); }
+@keyframes intro-sound-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.07); box-shadow: 0 10px 0 rgba(0,0,0,0.3), 0 0 0 12px rgba(255,255,255,0.18); }
 }
 .intro-skip-btn {
   position: absolute;
@@ -190,11 +191,13 @@ button:focus-visible,
   backdrop-filter: blur(4px);
 }
 @media (min-width: 700px) {
-  .intro-start-btn { font-size: 1.9rem; padding: 22px 44px; }
+  .intro-sound-btn { padding: 30px 40px; }
+  .intro-sound-btn .intro-sound-icon { font-size: 3.4rem; }
+  .intro-sound-btn .intro-sound-text { font-size: 1.7rem; }
   .intro-skip-btn { font-size: 1.2rem; padding: 12px 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .intro-start-btn { animation: none; }
+  .intro-sound-btn { animation: none; }
 }
 
 /* ---------- 시작 화면 ---------- */
