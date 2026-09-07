@@ -59,16 +59,20 @@
 
   .player-panel {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 18px;
+    overflow-y: auto;
+    max-height: 62vh;
   }
   .player-chip {
-    padding: 14px 16px;
     border-radius: var(--radius-lg);
-    gap: 14px;
     border-width: 4px;
   }
-  .player-chip .chip-name { font-size: 1.15rem; }
-  .player-chip .chip-money { font-size: 1.25rem; }
+  .chip-main { padding: 14px 16px; gap: 14px; }
+  .player-chip .chip-name { font-size: 1.2rem; }
+  .player-chip .chip-money { font-size: 1.3rem; }
+  .chip-owned-count { font-size: 1rem; padding: 5px 12px; }
+  .owned-tab { font-size: 0.95rem; padding: 5px 10px 5px 7px; }
+  .owned-tab .owned-flag { font-size: 1.2rem; }
 
   .dice-area { gap: 14px; }
   .dice-btn {

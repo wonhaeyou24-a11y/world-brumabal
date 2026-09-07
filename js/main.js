@@ -153,6 +153,11 @@ function bindGameScreen() {
     showSettingsModal();
   });
 
+  document.getElementById("player-panel").addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-action="toggle-owned"]');
+    if (btn) togglePlayerOwned(Number(btn.dataset.playerId));
+  });
+
   // 모달 안의 버튼은 동적으로 생성되므로 이벤트 위임으로 처리
   document.getElementById("modal-overlay").addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
@@ -228,8 +233,7 @@ function onDiceClick() {
   document.getElementById("dice-btn").disabled = true;
   document.getElementById("dice-hint").textContent = "";
 
-  const diceFaceEl = document.getElementById("dice-face");
-  playDiceAnimation(diceFaceEl, (value) => {
+  rollDiceInCenter((value) => {
     document.getElementById("dice-hint").textContent = `${value}칸 이동!`;
     animateMove(value);
   });

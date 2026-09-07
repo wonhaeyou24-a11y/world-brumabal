@@ -69,21 +69,30 @@
 .player-panel {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  align-content: start;
 }
 .player-chip {
+  position: relative;
   background: var(--white);
   border-radius: var(--radius-md);
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   box-shadow: var(--shadow-soft);
   border: 3px solid transparent;
+  overflow: hidden;
 }
 .player-chip.is-current {
   border-color: var(--sun);
+}
+.chip-main {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
 }
 .player-chip .chip-face {
   display: inline-flex;
@@ -91,20 +100,76 @@
 }
 .player-chip .chip-info {
   min-width: 0;
+  flex: 1;
 }
 .player-chip .chip-name {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .player-chip .chip-money {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--sky-deep);
   font-weight: bold;
 }
-.player-chip { position: relative; }
+.chip-owned-count {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: "Jua", sans-serif;
+  font-size: 0.85rem;
+  color: var(--navy);
+  background: var(--cream);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.chip-owned-count .owned-caret { transition: transform 0.15s ease; }
+.player-chip.is-expanded .chip-owned-count .owned-caret { transform: rotate(180deg); }
+
+/* 파일철처럼 펼쳐지는 보유 국가 목록 */
+.owned-folder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0 10px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.22s ease, opacity 0.22s ease, padding 0.22s ease;
+  background: color-mix(in srgb, var(--chip-color) 10%, white);
+}
+.player-chip.is-expanded .owned-folder {
+  max-height: 60vh;
+  opacity: 1;
+  padding: 8px 10px 10px;
+}
+.owned-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--white);
+  border-left: 4px solid var(--chip-color);
+  border-radius: 4px 10px 10px 4px;
+  padding: 4px 8px 4px 6px;
+  font-size: 0.8rem;
+  box-shadow: 0 1px 2px rgba(31, 42, 68, 0.14);
+  max-width: 100%;
+}
+.owned-tab .owned-flag { font-size: 1rem; flex-shrink: 0; }
+.owned-tab .owned-name {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.owned-empty {
+  padding: 6px 0;
+  font-size: 0.8rem;
+  opacity: 0.55;
+}
 .money-flash {
   position: absolute;
   right: 8px;

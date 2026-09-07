@@ -5,10 +5,72 @@
    ========================================================== */
 
 #board-wrapper {
+  position: relative;
+  container-type: size;
   width: 100%;
   max-width: 720px;
   aspect-ratio: 1 / 1;
   margin: 0 auto;
+}
+
+/* ---------- 게임판 가운데 주사위 무대 ---------- */
+.dice-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2%;
+  pointer-events: none;
+}
+.dice-stage.is-open .dice-stage-die {
+  animation: dice-stage-in 0.25s ease-out;
+}
+@keyframes dice-stage-in {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.dice-stage-die {
+  font-size: clamp(3.5rem, 26cqmin, 12rem);
+  line-height: 1;
+  filter: drop-shadow(0 10px 16px rgba(31, 42, 68, 0.35));
+  color: var(--navy);
+}
+.dice-stage-die.rolling {
+  animation: dice-stage-roll 0.5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+@keyframes dice-stage-roll {
+  0% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(160deg) scale(1.15); }
+  50% { transform: rotate(340deg) scale(0.95); }
+  75% { transform: rotate(520deg) scale(1.15); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+.dice-stage-num {
+  font-family: "Jua", sans-serif;
+  font-size: clamp(3rem, 22cqmin, 10rem);
+  color: var(--coral);
+  -webkit-text-stroke: clamp(2px, 1cqmin, 6px) var(--white);
+  text-shadow: 0 8px 0 rgba(31, 42, 68, 0.18);
+  opacity: 0;
+  transform: scale(0.2);
+}
+.dice-stage-num.show {
+  animation: dice-num-pop 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) forwards;
+}
+@keyframes dice-num-pop {
+  0% { opacity: 0; transform: scale(0.2) rotate(-12deg); }
+  55% { opacity: 1; transform: scale(1.25) rotate(6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dice-stage.is-open .dice-stage-die,
+  .dice-stage-die.rolling,
+  .dice-stage-num.show { animation: none; }
+  .dice-stage-num.show { opacity: 1; transform: none; }
 }
 
 .board {

@@ -243,22 +243,59 @@ function renderBoardDynamic(gameState, opts = {}) {
 /* ---------------------------------------------------------
    플레이어 패널 / 상단바
 --------------------------------------------------------- */
+const expandedPlayers = new Set(); // 소유 국가 파일철을 펼쳐 놓은 플레이어
+
+function ownedFolderHTML(player) {
+  const owned = player.ownedCountries
+    .map((id) => getCountryById(id))
+    .filter(Boolean);
+  if (owned.length === 0) {
+    return `<div class="owned-folder"><div class="owned-empty">아직 산 나라가 없어요</div></div>`;
+  }
+  const tabs = owned
+    .map(
+      (c) => `
+      <span class="owned-tab" title="${escapeHtml(c.nameKo)}">
+        <span class="owned-flag">${c.flag}</span>
+        <span class="owned-name">${escapeHtml(c.nameKo)}</span>
+      </span>`
+    )
+    .join("");
+  return `<div class="owned-folder">${tabs}</div>`;
+}
+
 function renderPlayerPanel(gameState) {
   const panel = document.getElementById("player-panel");
   panel.innerHTML = gameState.players
     .map((p, i) => {
       const isCurrent = i === gameState.currentPlayerIndex;
+      const count = p.ownedCountries.length;
+      const expanded = expandedPlayers.has(p.id);
       return `
-        <div class="player-chip ${isCurrent ? "is-current" : ""}" data-player-id="${p.id}" style="--chip-color:${p.color};border-color:${isCurrent ? p.color : "transparent"}">
-          <span class="chip-face">${pieceMarkup(playerPiece(p), "md")}</span>
-          <div class="chip-info">
-            <div class="chip-name">${escapeHtml(p.name)}${p.isAI ? " 🤖" : ""}</div>
-            <div class="chip-money">💰${p.money}</div>
-          </div>
+        <div class="player-chip ${isCurrent ? "is-current" : ""} ${expanded ? "is-expanded" : ""}"
+             data-player-id="${p.id}" style="--chip-color:${p.color};border-color:${isCurrent ? p.color : "transparent"}">
+          <button type="button" class="chip-main" data-action="toggle-owned" data-player-id="${p.id}">
+            <span class="chip-face">${pieceMarkup(playerPiece(p), "md")}</span>
+            <div class="chip-info">
+              <div class="chip-name">${escapeHtml(p.name)}${p.isAI ? " 🤖" : ""}</div>
+              <div class="chip-money">💰${p.money}</div>
+            </div>
+            <span class="chip-owned-count" aria-label="보유 국가 ${count}개">
+              <span class="owned-num">🚩 ${count}</span>
+              <span class="owned-caret">▾</span>
+            </span>
+          </button>
+          ${ownedFolderHTML(p)}
         </div>
       `;
     })
     .join("");
+}
+
+function togglePlayerOwned(playerId) {
+  if (expandedPlayers.has(playerId)) expandedPlayers.delete(playerId);
+  else expandedPlayers.add(playerId);
+  if (window.gameState) renderPlayerPanel(window.gameState);
 }
 
 /** 플레이어 칩 위에 +💰50 / -💰40 같은 뱃지를 잠깐 띄운다 */
@@ -402,6 +439,8 @@ window.resetSetupAssignments = resetSetupAssignments;
 window.buildBoardDOMOnce = buildBoardDOMOnce;
 window.renderBoardDynamic = renderBoardDynamic;
 window.renderGameScreen = renderGameScreen;
+window.renderPlayerPanel = renderPlayerPanel;
+window.togglePlayerOwned = togglePlayerOwned;
 window.renderResultScreen = renderResultScreen;
 window.renderCollectionScreen = renderCollectionScreen;
 window.buildQuizModalHTML = buildQuizModalHTML;
