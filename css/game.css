@@ -191,9 +191,11 @@
   gap: 6px;
   padding: 8px 14px 14px;
   background: color-mix(in srgb, var(--chip-color) 12%, white);
-  max-height: 34vh;
+  max-height: 22vh;
   overflow-y: auto;
+  scrollbar-width: none;
 }
+.owned-folder::-webkit-scrollbar { display: none; }
 .owned-folder.is-empty { padding-block: 10px; }
 .owned-tab {
   display: inline-flex;

@@ -51,15 +51,15 @@ function renderSetupForm(count) {
 
   wrap.innerHTML = "";
   for (let i = 0; i < count; i++) {
+    const chosen = pieces.find((pc) => pc.id === setupPieceAssign[i]);
+    const label = chosen ? chosen.label : DEFAULT_NAMES[i] || `플레이어 ${i + 1}`;
     const row = document.createElement("div");
     row.className = "player-form-row";
     row.dataset.index = i;
     row.innerHTML = `
       <div class="pf-head">
-        <input data-role="name" data-index="${i}" type="text" maxlength="8"
-               placeholder="플레이어 ${i + 1}" value="${escapeHtml(
-                 setupAIAssign[i] ? `AI ${i + 1}` : DEFAULT_NAMES[i] || "플레이어 " + (i + 1)
-               )}" />
+        <span class="pf-tag">${i + 1}P</span>
+        <span class="pf-name" data-role="name-label">${escapeHtml(setupAIAssign[i] ? label + " · AI" : label)}</span>
         <button type="button" class="ai-toggle ${setupAIAssign[i] ? "is-on" : ""}" data-role="ai" data-index="${i}"
                 aria-pressed="${setupAIAssign[i] ? "true" : "false"}" title="AI가 대신 플레이">
           <span class="ai-toggle-face">🤖</span><span class="ai-toggle-text">AI</span>
@@ -99,10 +99,7 @@ function renderSetupForm(count) {
       const i = Number(btn.dataset.index);
       const on = btn.getAttribute("aria-pressed") !== "true";
       setupAIAssign[i] = on;
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-      btn.classList.toggle("is-on", on);
-      const input = btn.closest(".player-form-row").querySelector('input[data-role="name"]');
-      input.value = on ? `AI ${i + 1}` : DEFAULT_NAMES[i] || `플레이어 ${i + 1}`;
+      renderSetupForm(count);
     });
   });
 }
@@ -113,14 +110,17 @@ function resetSetupAssignments() {
 }
 
 function readSetupPlayerConfigs() {
-  const names = Array.from(document.querySelectorAll('input[data-role="name"]'));
-  const ais = Array.from(document.querySelectorAll('.ai-toggle[data-role="ai"]'));
+  const rows = Array.from(document.querySelectorAll(".player-form-row"));
   const pieces = window.PIECES || [];
-  return names.map((input, i) => ({
-    name: input.value.trim() || `플레이어 ${i + 1}`,
-    pieceId: setupPieceAssign[i] || (pieces[i % pieces.length] || {}).id,
-    isAI: ais[i] ? ais[i].getAttribute("aria-pressed") === "true" : false,
-  }));
+  return rows.map((_, i) => {
+    const pieceId = setupPieceAssign[i] || (pieces[i % pieces.length] || {}).id;
+    const pc = pieces.find((p) => p.id === pieceId);
+    return {
+      name: (pc && pc.label) || DEFAULT_NAMES[i] || `플레이어 ${i + 1}`,
+      pieceId,
+      isAI: !!setupAIAssign[i],
+    };
+  });
 }
 
 /* ---------------------------------------------------------
