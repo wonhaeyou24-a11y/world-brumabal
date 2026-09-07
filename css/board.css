@@ -83,13 +83,23 @@
   50% { transform: scale(1.05); box-shadow: 0 10px 0 rgba(31,42,68,0.14), 0 0 0 8px rgba(255,201,77,0.35); }
 }
 
+.dice-stage-dice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 3cqmin, 20px);
+}
 .dice-stage-die {
-  font-size: clamp(2.6rem, 20cqmin, 7rem);
+  font-size: clamp(2rem, 13cqmin, 4.6rem);
   line-height: 1;
   filter: drop-shadow(0 6px 10px rgba(31, 42, 68, 0.3));
 }
 .dice-stage-die.rolling {
   animation: dice-stage-roll 0.5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+#dice-stage-die-2.rolling {
+  animation-direction: reverse;
+  animation-duration: 0.42s;
 }
 @keyframes dice-stage-roll {
   0% { transform: rotate(0) scale(1); }

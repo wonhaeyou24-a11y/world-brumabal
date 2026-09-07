@@ -12,11 +12,20 @@ function rollDiceValue() {
   return Math.floor(Math.random() * 6) + 1;
 }
 
+/** 주사위 두 개를 굴린 결과 */
+function rollTwoDice() {
+  const d1 = rollDiceValue();
+  const d2 = rollDiceValue();
+  return { d1, d2, total: d1 + d2, isDouble: d1 === d2 };
+}
+
 /** 차례 카드를 띄운다. onRoll: 사람이 카드를 눌렀을 때 실행 (없으면 = AI 차례, 안 눌림) */
 function showTurnPrompt(player, onRoll) {
   const stage = document.getElementById("dice-stage");
   const turn = document.getElementById("dice-stage-turn");
+  const dice = document.getElementById("dice-stage-dice");
   const die = document.getElementById("dice-stage-die");
+  const die2 = document.getElementById("dice-stage-die-2");
   const num = document.getElementById("dice-stage-num");
   const hint = document.getElementById("dice-stage-hint");
   const btn = document.getElementById("dice-stage-btn");
@@ -24,9 +33,11 @@ function showTurnPrompt(player, onRoll) {
 
   const piece = window.pieceMarkup ? window.pieceMarkup(window.playerPiece(player), "lg") : "";
   turn.innerHTML = `${piece}<span class="ds-name">${player.name}${player.isAI ? " 🤖" : ""}의 차례!</span>`;
+  if (dice) dice.hidden = false;
   die.textContent = "🎲";
-  die.hidden = false;
+  die2.textContent = "🎲";
   die.classList.remove("rolling");
+  die2.classList.remove("rolling");
   num.textContent = "";
   num.classList.remove("show");
 
@@ -56,10 +67,12 @@ function hideTurnPrompt() {
 /** 차례 카드 안에서 주사위를 굴리고, 결과를 onFinish(value)로 넘긴다 */
 function rollDiceInCenter(onFinish) {
   const stage = document.getElementById("dice-stage");
+  const dice = document.getElementById("dice-stage-dice");
   const die = document.getElementById("dice-stage-die");
+  const die2 = document.getElementById("dice-stage-die-2");
   const num = document.getElementById("dice-stage-num");
   const hint = document.getElementById("dice-stage-hint");
-  const finalValue = rollDiceValue();
+  const roll = rollTwoDice();
 
   if (window.playSound) window.playSound("dice");
 
@@ -68,7 +81,20 @@ function rollDiceInCenter(onFinish) {
     stage.classList.remove("is-open", "is-prompt", "is-rolling");
     num.classList.remove("show");
     die.classList.remove("rolling");
-    onFinish(finalValue);
+    die2.classList.remove("rolling");
+    onFinish(roll.total, roll);
+  };
+
+  const showResult = () => {
+    die.classList.remove("rolling");
+    die2.classList.remove("rolling");
+    die.textContent = DICE_FACES[roll.d1 - 1];
+    die2.textContent = DICE_FACES[roll.d2 - 1];
+    if (dice) dice.hidden = true;
+    num.textContent = roll.total;
+    num.classList.add("show");
+    if (hint) hint.textContent = `${roll.d1} + ${roll.d2}${roll.isDouble ? "  ·  더블! 🎉" : ""}`;
+    if (window.playSound) window.playSound("land");
   };
 
   stage.classList.remove("hidden", "is-prompt");
@@ -76,31 +102,28 @@ function rollDiceInCenter(onFinish) {
   if (hint) hint.textContent = "";
   num.textContent = "";
   num.classList.remove("show");
+  if (dice) dice.hidden = false;
   die.textContent = "🎲";
-  die.hidden = false;
+  die2.textContent = "🎲";
   void stage.offsetWidth;
 
   const reduced = window.prefersReducedAnim && window.prefersReducedAnim();
   if (reduced) {
-    die.hidden = true;
-    num.textContent = finalValue;
-    num.classList.add("show");
-    setTimeout(done, 800);
+    showResult();
+    setTimeout(done, 900);
     return;
   }
 
   die.classList.add("rolling");
+  die2.classList.add("rolling");
   setTimeout(() => {
-    die.classList.remove("rolling");
-    die.hidden = true;
-    num.textContent = finalValue;
-    num.classList.add("show");
-    if (window.playSound) window.playSound("land");
-    setTimeout(done, 1050);
+    showResult();
+    setTimeout(done, 1100);
   }, 900);
 }
 
 window.rollDiceValue = rollDiceValue;
+window.rollTwoDice = rollTwoDice;
 window.rollDiceInCenter = rollDiceInCenter;
 window.showTurnPrompt = showTurnPrompt;
 window.hideTurnPrompt = hideTurnPrompt;
