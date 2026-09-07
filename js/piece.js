@@ -27,9 +27,12 @@ function playerPiece(player) {
 function pieceMarkup(piece, size) {
   if (!piece) return "";
   const cls = "piece piece--" + (size || "md");
+  const img = piece.image
+    ? `<img class="piece-photo" src="${piece.image}" alt="${piece.label}" draggable="false"
+           onerror="this.classList.add('is-missing')" />`
+    : "";
   return `<span class="${cls}" data-piece="${piece.id}" style="--piece-color:${piece.color}">
-    <img class="piece-photo" src="${piece.image}" alt="${piece.label}" draggable="false"
-         onerror="this.classList.add('is-missing')" />
+    ${img}
     <span class="piece-fallback" aria-hidden="true">${piece.token}</span>
   </span>`;
 }

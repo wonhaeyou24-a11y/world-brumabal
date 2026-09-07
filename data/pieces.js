@@ -13,7 +13,7 @@ const PIECES = [
   { id: "siu",    label: "시우", token: "🧒", color: "#FF7A59", image: "assets/pieces/siu.png" },
   { id: "dad",    label: "아빠", token: "👨", color: "#3DBBFF", image: "assets/pieces/dad.png" },
   { id: "mom",    label: "엄마", token: "👩", color: "#4CC97C", image: "assets/pieces/mom.png" },
-  { id: "friend", label: "친구", token: "🐻", color: "#FFC94D", image: "assets/pieces/friend.png" },
+  { id: "friend", label: "친구", token: "🐻", color: "#FFC94D", image: "" }, // 사진을 넣으려면 "assets/pieces/friend.png" 로 바꾸고 파일 저장
 ];
 
 window.PIECES = PIECES;
