@@ -8,11 +8,6 @@
   .screen {
     padding: 16px 10px 24px;
   }
-  .dice-btn {
-    width: 82px;
-    height: 82px;
-    font-size: 2.4rem;
-  }
 }
 
 /* 스마트폰 가로 모드: 게임판과 정보를 좌우로 */
@@ -39,12 +34,10 @@
     gap: 8px;
   }
   .player-panel { grid-template-columns: 1fr; }
-  .dice-btn { width: 84px; height: 84px; font-size: 2.6rem; }
 }
 
 /* 모션 최소화 선호 사용자 배려 */
 @media (prefers-reduced-motion: reduce) {
-  .dice-btn.dice--rolling { animation: none; }
   .modal-content { animation: none; }
   .tile-token { transition: none; }
 }

@@ -329,17 +329,6 @@ function renderGameScreen(gameState) {
   renderTopbar(gameState);
   renderPlayerPanel(gameState);
   renderBoardDynamic(gameState);
-
-  const current = getCurrentPlayer(gameState);
-  const diceBtn = document.getElementById("dice-btn");
-  const hint = document.getElementById("dice-hint");
-  if (current.isAI) {
-    diceBtn.disabled = true;
-    hint.textContent = "🤖 AI가 생각 중…";
-  } else {
-    diceBtn.disabled = false;
-    if (hint.textContent === "🤖 AI가 생각 중…") hint.textContent = "";
-  }
 }
 
 /* ---------------------------------------------------------
@@ -417,7 +406,7 @@ function renderCollectionScreen(gameState) {
 function landmarkImgHTML(country, extraClass) {
   return `<span class="landmark ${extraClass || ""}">
     <img class="landmark-photo" src="${country.landmarkImg}" alt="${escapeHtml(country.landmarkKo)}"
-         loading="lazy" onerror="this.classList.add('is-missing')" />
+         onerror="this.classList.add('is-missing')" />
     <span class="landmark-flag">${country.flag}</span>
   </span>`;
 }

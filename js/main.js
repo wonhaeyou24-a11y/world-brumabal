@@ -59,6 +59,7 @@ function bindStartScreen() {
     renderGameScreen(window.gameState);
     showScreen("screen-game");
     startAILoop();
+    promptCurrentTurn();
   });
 
   document.getElementById("btn-collection").addEventListener("click", () => {
@@ -130,6 +131,7 @@ function bindSetupScreen() {
     saveGame(window.gameState);
     showScreen("screen-game");
     startAILoop();
+    promptCurrentTurn();
   });
 }
 
@@ -137,8 +139,6 @@ function bindSetupScreen() {
    게임 화면 - 주사위 & 턴 진행
 --------------------------------------------------------- */
 function bindGameScreen() {
-  document.getElementById("dice-btn").addEventListener("click", onDiceClick);
-
   document.getElementById("btn-open-collection").addEventListener("click", () => {
     if (!window.gameState) return;
     if (isModalOpen()) return; // 모달 처리 중에는 화면 이동 금지
@@ -244,17 +244,22 @@ function markVisit(gs, playerId, countryId) {
   addToTravelLog(countryId);
 }
 
+/** 현재 플레이어의 "차례 카드"를 게임판 가운데에 띄운다 */
+function promptCurrentTurn() {
+  const gs = window.gameState;
+  if (!gs || gs.status !== "playing") return;
+  if (document.getElementById("screen-game").classList.contains("hidden")) return;
+  if (isModalOpen()) return;
+  showTurnPrompt(getCurrentPlayer(gs), onDiceClick);
+}
+
 function onDiceClick() {
   if (window.unlockAudio) window.unlockAudio();
   const gs = window.gameState;
   if (!gs || gs.isMoving || gs.status === "ended") return;
 
   gs.isMoving = true;
-  document.getElementById("dice-btn").disabled = true;
-  document.getElementById("dice-hint").textContent = "";
-
   rollDiceInCenter((value) => {
-    document.getElementById("dice-hint").textContent = `${value}칸 이동!`;
     animateMove(value);
   });
 }
@@ -601,8 +606,8 @@ function finishTurn() {
     return;
   }
 
-  document.getElementById("dice-btn").disabled = false;
   renderGameScreen(gs);
+  promptCurrentTurn();
 }
 
 /* ---------------------------------------------------------

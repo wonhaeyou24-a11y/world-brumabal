@@ -231,42 +231,6 @@
   100% { opacity: 0; transform: translateY(-18px); }
 }
 
-.dice-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-.dice-btn {
-  width: 92px;
-  height: 92px;
-  border-radius: 26px;
-  background: var(--white);
-  box-shadow: var(--shadow-soft);
-  font-size: 2.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.dice-btn:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 rgba(31, 42, 68, 0.12);
-}
-.dice-btn.dice--rolling {
-  animation: dice-shake 0.15s infinite;
-}
-@keyframes dice-shake {
-  0% { transform: rotate(-6deg); }
-  50% { transform: rotate(6deg); }
-  100% { transform: rotate(-6deg); }
-}
-.dice-hint {
-  font-size: 0.85rem;
-  opacity: 0.7;
-  min-height: 1.2em;
-}
-
 /* ---------- 모달(국가 도착 카드 / 통행료 / 게임방법) ---------- */
 .modal-overlay {
   position: fixed;

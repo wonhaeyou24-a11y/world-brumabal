@@ -13,31 +13,65 @@
   margin: 0 auto;
 }
 
-/* ---------- 게임판 가운데 주사위 무대 ---------- */
+/* ---------- 게임판 가운데 "차례 + 주사위" 카드 ---------- */
 .dice-stage {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 30;
+  width: min(62cqmin, 340px);
+  pointer-events: none;
+}
+.ds-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(31, 42, 68, 0.28), inset 0 0 0 3px var(--sun);
+  padding: 5cqmin 5cqmin 4cqmin;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2%;
-  pointer-events: none;
+  gap: 3cqmin;
+  animation: ds-in 0.28s cubic-bezier(0.2, 1.5, 0.4, 1);
 }
-.dice-stage.is-open .dice-stage-die {
-  animation: dice-stage-in 0.25s ease-out;
-}
-@keyframes dice-stage-in {
-  from { transform: scale(0.3); opacity: 0; }
+@keyframes ds-in {
+  from { transform: scale(0.6); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
-.dice-stage-die {
-  font-size: clamp(3.5rem, 26cqmin, 12rem);
-  line-height: 1;
-  filter: drop-shadow(0 10px 16px rgba(31, 42, 68, 0.35));
+.ds-turn {
+  display: flex;
+  align-items: center;
+  gap: 2.5cqmin;
+  font-family: "Jua", sans-serif;
+  font-size: clamp(0.9rem, 4cqmin, 1.6rem);
   color: var(--navy);
+}
+.ds-turn .piece--lg { width: clamp(2rem, 9cqmin, 3.6rem); height: clamp(2rem, 9cqmin, 3.6rem); }
+
+.ds-btn {
+  position: relative;
+  width: clamp(80px, 34cqmin, 190px);
+  height: clamp(80px, 34cqmin, 190px);
+  border-radius: 28px;
+  background: linear-gradient(160deg, #fff 0%, #eef4ff 100%);
+  box-shadow: 0 8px 0 rgba(31, 42, 68, 0.14), inset 0 0 0 2px rgba(31,42,68,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+.dice-stage.is-prompt .ds-btn { animation: ds-btn-pulse 1.1s ease-in-out infinite; }
+.ds-btn.is-ai { pointer-events: none; opacity: 0.9; }
+.ds-btn:active { transform: translateY(5px); box-shadow: 0 3px 0 rgba(31, 42, 68, 0.14); }
+@keyframes ds-btn-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); box-shadow: 0 10px 0 rgba(31,42,68,0.14), 0 0 0 8px rgba(255,201,77,0.35); }
+}
+
+.dice-stage-die {
+  font-size: clamp(2.6rem, 20cqmin, 7rem);
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(31, 42, 68, 0.3));
 }
 .dice-stage-die.rolling {
   animation: dice-stage-roll 0.5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
@@ -45,31 +79,36 @@
 @keyframes dice-stage-roll {
   0% { transform: rotate(0) scale(1); }
   25% { transform: rotate(160deg) scale(1.15); }
-  50% { transform: rotate(340deg) scale(0.95); }
+  50% { transform: rotate(340deg) scale(0.9); }
   75% { transform: rotate(520deg) scale(1.15); }
   100% { transform: rotate(720deg) scale(1); }
 }
 .dice-stage-num {
+  position: absolute;
   font-family: "Jua", sans-serif;
-  font-size: clamp(3rem, 22cqmin, 10rem);
+  font-size: clamp(3rem, 24cqmin, 8rem);
   color: var(--coral);
   -webkit-text-stroke: clamp(2px, 1cqmin, 6px) var(--white);
-  text-shadow: 0 8px 0 rgba(31, 42, 68, 0.18);
+  text-shadow: 0 6px 0 rgba(31, 42, 68, 0.18);
   opacity: 0;
-  transform: scale(0.2);
 }
 .dice-stage-num.show {
   animation: dice-num-pop 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) forwards;
 }
 @keyframes dice-num-pop {
   0% { opacity: 0; transform: scale(0.2) rotate(-12deg); }
-  55% { opacity: 1; transform: scale(1.25) rotate(6deg); }
+  55% { opacity: 1; transform: scale(1.3) rotate(6deg); }
   100% { opacity: 1; transform: scale(1) rotate(0); }
 }
+.ds-hint {
+  font-size: clamp(0.7rem, 3cqmin, 1.05rem);
+  color: var(--sky-deep);
+  min-height: 1.2em;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dice-stage.is-open .dice-stage-die,
-  .dice-stage-die.rolling,
-  .dice-stage-num.show { animation: none; }
+  .ds-card, .dice-stage.is-prompt .ds-btn,
+  .dice-stage-die.rolling, .dice-stage-num.show { animation: none; }
   .dice-stage-num.show { opacity: 1; transform: none; }
 }
 

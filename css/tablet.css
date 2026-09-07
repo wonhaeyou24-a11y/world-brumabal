@@ -76,20 +76,6 @@
   .pc-avatar-name { font-size: 0.78rem; padding: 3px 9px; }
   .owned-tab { font-size: 0.95rem; padding: 6px 11px 6px 8px; }
   .owned-tab .owned-flag { font-size: 1.2rem; }
-
-  .dice-area { gap: 14px; }
-  .dice-btn {
-    width: clamp(130px, 15vw, 190px);
-    height: clamp(130px, 15vw, 190px);
-    border-radius: 38px;
-    font-size: clamp(3.6rem, 7vw, 5.4rem);
-  }
-  .dice-hint {
-    font-size: 1.3rem;
-    font-family: "Jua", sans-serif;
-    min-height: 1.4em;
-    color: var(--coral);
-  }
 }
 
 /* 아주 넓은 화면(24인치+): 판을 더 키우고 카드도 큼직하게 */
@@ -106,8 +92,6 @@
   .turn-indicator { font-size: 1.4rem; }
   .player-panel { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
   .pc-money { font-size: 1.35rem; }
-  .dice-btn { width: 140px; height: 140px; font-size: 4rem; }
-  .dice-hint { font-size: 1.2rem; }
 }
 
 /* ---------- 큰 화면에서 모달/나라 카드도 크고 시원하게 ---------- */

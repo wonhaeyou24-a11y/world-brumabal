@@ -85,9 +85,15 @@
   <section id="screen-game" class="screen hidden">
     <div id="board-wrapper">
       <div id="board" class="board"></div>
-      <div id="dice-stage" class="dice-stage hidden" aria-hidden="true">
-        <div id="dice-stage-die" class="dice-stage-die">🎲</div>
-        <div id="dice-stage-num" class="dice-stage-num"></div>
+      <div id="dice-stage" class="dice-stage hidden">
+        <div class="ds-card">
+          <div id="dice-stage-turn" class="ds-turn"></div>
+          <button type="button" id="dice-stage-btn" class="ds-btn">
+            <span id="dice-stage-die" class="dice-stage-die">🎲</span>
+            <span id="dice-stage-num" class="dice-stage-num"></span>
+          </button>
+          <div id="dice-stage-hint" class="ds-hint"></div>
+        </div>
       </div>
     </div>
 
@@ -103,11 +109,6 @@
       </div>
 
       <div id="player-panel" class="player-panel"></div>
-
-      <div class="dice-area">
-        <button id="dice-btn" class="dice-btn"><span id="dice-face">🎲</span></button>
-        <div id="dice-hint" class="dice-hint"></div>
-      </div>
     </aside>
   </section>
 
