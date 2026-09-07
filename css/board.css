@@ -198,9 +198,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15cqmin;
+  gap: 0.3cqmin;
   overflow: visible;
-  padding: 0.6cqmin 0.4cqmin;
+  padding: 0.9cqmin 0.6cqmin;
   box-shadow: 0 2px 0 rgba(31, 42, 68, 0.1), 0 4px 8px rgba(31, 42, 68, 0.06);
   min-width: 0;
   min-height: 0;
@@ -211,27 +211,29 @@
   line-height: 0;
 }
 .tile-flag .flag {
-  width: clamp(1.3rem, 5cqmin, 2.6rem);
-  border-radius: clamp(2px, 0.7cqmin, 4px);
+  width: clamp(1.6rem, 6.5cqmin, 3.6rem);
+  border-radius: clamp(2px, 0.8cqmin, 5px);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(31, 42, 68, 0.14);
 }
-.tile-flag .flag-emoji { font-size: clamp(0.8rem, 3.6cqmin, 1.9rem); }
+.tile-flag .flag-emoji { font-size: clamp(1rem, 4.6cqmin, 2.6rem); }
 .tile-icon {
-  font-size: clamp(1.1rem, 5cqmin, 2.8rem);
+  font-size: clamp(1.4rem, 6.5cqmin, 3.8rem);
   line-height: 1;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.16));
 }
 .tile-name {
   font-family: "Jua", sans-serif;
-  font-size: clamp(0.44rem, 1.95cqmin, 0.92rem);
-  line-height: 1.05;
+  font-size: clamp(0.55rem, 2.5cqmin, 1.25rem);
+  line-height: 1.02;
   color: var(--navy);
-  white-space: nowrap;
+  word-break: keep-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 .tile-capital {
-  font-size: clamp(0.38rem, 1.6cqmin, 0.74rem);
+  font-size: clamp(0.46rem, 2cqmin, 0.98rem);
   color: var(--sky-deep);
   opacity: 0.85;
   white-space: nowrap;

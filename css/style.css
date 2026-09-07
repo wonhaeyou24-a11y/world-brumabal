@@ -490,6 +490,51 @@ button:focus-visible,
 .setting-switch.is-on .setting-knob {
   transform: translateX(22px);
 }
+.setting-go {
+  font-family: "Jua", sans-serif;
+  font-size: 1.3rem;
+  color: var(--sky-deep);
+  flex-shrink: 0;
+}
+
+/* ---------- 나라 바꾸기 모달 ---------- */
+.cs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 48vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-right: 2px;
+}
+.cs-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.cs-row.is-locked { opacity: 0.6; }
+.cs-flag { flex-shrink: 0; display: inline-flex; }
+.cs-flag .flag { width: 2rem; }
+.cs-name {
+  flex: 1;
+  font-family: "Jua", sans-serif;
+  font-size: 1.05rem;
+}
+.cs-lock { font-size: 0.85rem; color: var(--coral); flex-shrink: 0; }
+.cs-select {
+  flex: 1;
+  min-width: 0;
+  font-family: "Gowun Dodum", sans-serif;
+  font-size: 1rem;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 2px solid rgba(31, 42, 68, 0.16);
+  background: var(--cream);
+  color: var(--navy);
+}
 
 /* ---------- 결과 화면 ---------- */
 #screen-result {

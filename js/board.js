@@ -10,7 +10,7 @@
  */
 
 const EVENT_EVERY = 7;             // 국가 N개마다 황금열쇠 칸 1개
-const BOARD_COUNTRY_TARGET = 32;   // 한 판에 게임판에 올릴 국가 수
+const BOARD_COUNTRY_TARGET = 24;   // 한 판에 게임판에 올릴 국가 수(칸을 크게 하려고 줄임)
 
 const CONTINENT_ORDER = ["아시아", "유럽", "북아메리카", "남아메리카", "아프리카", "오세아니아"];
 
@@ -23,12 +23,17 @@ function _shuffled(arr) {
   return a;
 }
 
+/** 나라칸에 이름이 무난히 들어가는 길이 (한글 5자 이하). 더 길면 기본은 벤치로 */
+const NAME_FITS = (c) => (c.nameKo || "").length <= 5;
+
 /** 이번 판에 게임판에 올릴 국가 ID 목록을 고른다 (대륙 순서로 정렬해 반환) */
 function pickBoardCountryIds(target = BOARD_COUNTRY_TARGET) {
   const all = getAllCountries();
-  // 데이터가 target 이하면 전부 사용(정의 순서 유지), 많으면 무작위로 골라 대륙 순 정렬
+  // 데이터가 target 이하면 전부 사용(정의 순서 유지), 많으면 무작위로 고름
   if (all.length <= target) return all.map((c) => c.id);
-  const chosen = _shuffled(all).slice(0, target);
+  // 이름이 짧아 칸에 잘 들어가는 나라를 먼저, 긴 이름은 뒤로 밀어 기본은 벤치로
+  const pool = _shuffled(all).sort((a, b) => (NAME_FITS(a) ? 0 : 1) - (NAME_FITS(b) ? 0 : 1));
+  const chosen = pool.slice(0, target);
   chosen.sort(
     (a, b) =>
       CONTINENT_ORDER.indexOf(a.continent) - CONTINENT_ORDER.indexOf(b.continent) ||
@@ -101,5 +106,33 @@ function buildBoardTiles(options = {}) {
   return { tiles, side };
 }
 
+/* ---------------------------------------------------------
+   나라 바꾸기 (게임 중 설정에서 칸의 나라를 교체)
+--------------------------------------------------------- */
+
+/** 지금 게임판에 없는 나머지 나라 ID 목록 (도감 순서) */
+function getBenchCountryIds(gameState) {
+  const onBoard = new Set(gameState.boardCountryIds || []);
+  return getAllCountries()
+    .map((c) => c.id)
+    .filter((id) => !onBoard.has(id));
+}
+
+/** oldId 칸의 나라를 newId로 교체. 이미 누가 산 나라이거나 조건이 안 맞으면 false */
+function swapBoardCountry(gameState, oldId, newId) {
+  if (!gameState || !Array.isArray(gameState.boardCountryIds)) return false;
+  if (oldId === newId) return false;
+  const idx = gameState.boardCountryIds.indexOf(oldId);
+  if (idx === -1) return false;
+  if (gameState.boardCountryIds.includes(newId)) return false;
+  if (!getCountryById(newId)) return false;
+  // 이미 구입된 나라는 못 바꾼다
+  if (window.getCountryOwnerId && getCountryOwnerId(gameState, oldId) !== null) return false;
+  gameState.boardCountryIds[idx] = newId;
+  return true;
+}
+
 window.pickBoardCountryIds = pickBoardCountryIds;
 window.buildBoardTiles = buildBoardTiles;
+window.getBenchCountryIds = getBenchCountryIds;
+window.swapBoardCountry = swapBoardCountry;

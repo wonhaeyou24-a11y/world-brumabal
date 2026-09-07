@@ -221,6 +221,30 @@ function bindGameScreen() {
     } else if (action === "toggle-hardquiz") {
       saveSettings({ hardQuiz: !loadSettings().hardQuiz });
       showSettingsModal();
+    } else if (action === "open-country-swap") {
+      showCountrySwapModal();
+    } else if (action === "open-settings") {
+      showSettingsModal();
+    }
+  });
+
+  // 나라 바꾸기 select
+  document.getElementById("modal-overlay").addEventListener("change", (e) => {
+    const sel = e.target.closest('select[data-role="country-swap"]');
+    if (!sel) return;
+    const gs = window.gameState;
+    if (!gs) return;
+    const oldId = sel.dataset.old;
+    const newId = sel.value;
+    if (window.swapBoardCountry && swapBoardCountry(gs, oldId, newId)) {
+      buildBoardDOMOnce(gs);
+      renderBoardDynamic(gs);
+      renderPlayerPanel(gs);
+      saveGame(gs);
+      if (window.playSound) window.playSound("move");
+      showCountrySwapModal();
+    } else {
+      sel.value = oldId; // 실패 시 되돌림
     }
   });
 }
@@ -235,17 +259,37 @@ function showSettingsModal() {
       <span class="setting-label">${label}</span>
       <span class="setting-switch ${on ? "is-on" : ""}"><span class="setting-knob"></span></span>
     </button>`;
+  const inGame = !!(window.gameState && window.gameState.status === "playing");
   showModal(`
     <h3 class="modal-title">⚙️ 설정</h3>
     <div class="setting-list">
       ${row("🔊 소리", s.soundOn, "toggle-sound")}
       ${row("✨ 애니메이션", s.animOn, "toggle-anim")}
       ${row("🧠 어려운 퀴즈 (보기 4개)", s.hardQuiz, "toggle-hardquiz")}
+      ${
+        inGame
+          ? `<button class="setting-row" data-action="open-country-swap">
+               <span class="setting-label">🌍 나라 바꾸기</span>
+               <span class="setting-go">›</span>
+             </button>`
+          : ""
+      }
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary btn-block" data-action="close-modal">확인</button>
     </div>
   `);
+}
+
+/** 나라 바꾸기 모달 (스크롤 위치 유지하며 다시 그림) */
+function showCountrySwapModal() {
+  const gs = window.gameState;
+  if (!gs) return;
+  const prev = document.querySelector(".cs-list");
+  const st = prev ? prev.scrollTop : 0;
+  showModal(buildCountrySwapHTML(gs));
+  const now = document.querySelector(".cs-list");
+  if (now) now.scrollTop = st;
 }
 
 let pendingArrival = null; // { countryId, discountRate, quizDone }

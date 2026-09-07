@@ -512,6 +512,49 @@ function buildQuizModalHTML(quiz, subtitle) {
 }
 
 /* ---------------------------------------------------------
+   나라 바꾸기 모달 (설정 → 게임판 칸의 나라 교체)
+--------------------------------------------------------- */
+function buildCountrySwapHTML(gameState) {
+  const bench = (window.getBenchCountryIds ? getBenchCountryIds(gameState) : [])
+    .map(getCountryById)
+    .filter(Boolean);
+
+  const rows = gameState.boardCountryIds
+    .map((id) => {
+      const c = getCountryById(id);
+      if (!c) return "";
+      const owned = window.getCountryOwnerId && getCountryOwnerId(gameState, id) !== null;
+      if (owned) {
+        return `<div class="cs-row is-locked">
+          <span class="cs-flag">${flagMarkup(c)}</span>
+          <span class="cs-name">${escapeHtml(c.nameKo)}</span>
+          <span class="cs-lock">🔒 구입됨</span>
+        </div>`;
+      }
+      const options = [c, ...bench]
+        .map(
+          (o) =>
+            `<option value="${o.id}" ${o.id === id ? "selected" : ""}>${escapeHtml(o.nameKo)} · ${escapeHtml(o.capitalKo)}</option>`
+        )
+        .join("");
+      return `<div class="cs-row">
+        <span class="cs-flag">${flagMarkup(c)}</span>
+        <select class="cs-select" data-role="country-swap" data-old="${id}">${options}</select>
+      </div>`;
+    })
+    .join("");
+
+  return `
+    <h3 class="modal-title">🌍 나라 바꾸기</h3>
+    <p class="modal-message" style="font-size:0.9rem;opacity:0.7">칸은 그대로예요. 칸 안의 나라만 바꿔서 놀 수 있어요.<br>이미 산 나라(🔒)는 바꿀 수 없어요.</p>
+    <div class="cs-list">${rows}</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" data-action="open-settings">← 설정</button>
+      <button class="btn btn-primary" data-action="close-modal">완료</button>
+    </div>`;
+}
+
+/* ---------------------------------------------------------
    유틸
 --------------------------------------------------------- */
 function escapeHtml(str) {
@@ -533,6 +576,7 @@ window.renderPlayerPanel = renderPlayerPanel;
 window.renderResultScreen = renderResultScreen;
 window.renderCollectionScreen = renderCollectionScreen;
 window.buildQuizModalHTML = buildQuizModalHTML;
+window.buildCountrySwapHTML = buildCountrySwapHTML;
 window.buildCountryCard = buildCountryCard;
 window.landmarkImgHTML = landmarkImgHTML;
 window.flagMarkup = flagMarkup;
