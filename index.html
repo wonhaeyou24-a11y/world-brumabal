@@ -22,15 +22,15 @@
 
   <!-- ========== 인트로 영상 ========== -->
   <section id="screen-intro" class="screen">
-    <video id="intro-video" class="intro-video" playsinline autoplay muted preload="auto"
+    <video id="intro-video" class="intro-video" playsinline preload="auto"
            poster="assets/intro/intro-poster.jpg">
       <source src="assets/intro/intro.mp4" type="video/mp4" />
     </video>
-    <button id="intro-sound" class="intro-sound-btn">
-      <span class="intro-sound-icon">🔊</span>
-      <span class="intro-sound-text">소리 켜기</span>
+    <button id="intro-sound" class="intro-sound-btn hidden">
+      <span class="intro-sound-icon">▶</span>
+      <span class="intro-sound-text">눌러서 시작</span>
     </button>
-    <button id="intro-skip" class="intro-skip-btn hidden">건너뛰기 ⏭</button>
+    <div id="intro-skip" class="intro-skip-btn hidden">화면을 터치하면 넘어가요</div>
   </section>
 
   <!-- ========== 시작 화면 ========== -->

@@ -1,68 +1,75 @@
 /**
  * intro.js
- * 웹앱을 켜면 인트로 영상이 바로(음소거) 재생된다.
- * 가운데 "🔊 소리 켜기" 버튼을 누르면 처음부터 소리와 함께 다시 재생된다.
- * 재생 중 화면을 터치하면 영상을 건너뛰고 메인 화면으로 넘어간다.
- * 영상이 끝나도 메인 화면으로 넘어간다.
+ * 웹앱을 켜면 인트로 영상을 "소리와 함께 처음부터" 재생한다.
+ *  - 브라우저가 소리 있는 자동재생을 허용하면 바로 재생된다.
+ *  - 막히면 첫 장면(포스터)에 "▶ 눌러서 시작" 버튼이 떠서, 누르면 그때 소리와 함께
+ *    처음부터 재생된다. (음소거로 미리 틀지 않으므로 되감기는 느낌이 없다)
+ *  - 재생 중 화면을 터치하면 건너뛰고 메인 화면으로 넘어간다.
+ *  - 영상이 끝나거나 재생 오류가 나면 메인 화면으로 넘어간다.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
   const screen = document.getElementById("screen-intro");
   const video = document.getElementById("intro-video");
-  const soundBtn = document.getElementById("intro-sound");
-  const skipBtn = document.getElementById("intro-skip");
+  const startBtn = document.getElementById("intro-sound"); // "▶ 눌러서 시작"
+  const skipHint = document.getElementById("intro-skip");  // "화면을 터치하면 넘어가요"
   const startScreen = document.getElementById("screen-start");
   if (!screen || !video) return;
 
   let done = false;
-  let soundOn = false;
+  let playing = false;
 
   function goToStart() {
     if (done) return;
     done = true;
-    try {
-      video.pause();
-    } catch (e) {}
+    try { video.pause(); } catch (e) {}
     screen.classList.add("hidden");
     if (startScreen) startScreen.classList.remove("hidden");
     if (window.refreshContinueButton) window.refreshContinueButton();
   }
 
-  function enableSound() {
-    if (soundOn || done) return;
-    soundOn = true;
-    if (window.unlockAudio) window.unlockAudio(); // 게임 효과음도 함께 잠금 해제
-    soundBtn.classList.add("hidden");
-    skipBtn.classList.remove("hidden");
-    video.muted = false;
-    try {
-      video.currentTime = 0;
-    } catch (e) {}
-    const p = video.play();
-    if (p && typeof p.catch === "function") p.catch(() => goToStart());
+  function markPlaying() {
+    if (playing) return;
+    playing = true;
+    if (startBtn) startBtn.classList.add("hidden");
+    if (skipHint) skipHint.classList.remove("hidden");
   }
 
-  // 음소거 자동재생 시작 (HTML autoplay 속성 + 보강)
-  const first = video.play();
-  if (first && typeof first.catch === "function") {
-    first.catch(() => {
-      // 음소거 자동재생마저 막히면 소리 버튼이 재생 버튼 역할
-      soundBtn.querySelector(".intro-sound-text").textContent = "눌러서 재생";
+  // 소리와 함께 처음부터 재생 시도 (currentTime은 건드리지 않는다)
+  function tryPlay() {
+    if (done) return;
+    if (window.unlockAudio) window.unlockAudio(); // 게임 효과음도 함께 잠금 해제
+    video.muted = false;
+    const p = video.play();
+    if (p && typeof p.then === "function") {
+      p.then(markPlaying).catch(() => {
+        if (startBtn) startBtn.classList.remove("hidden");
+      });
+    }
+  }
+
+  tryPlay();
+
+  // 자동재생이 막혔으면 잠깐 뒤에 "눌러서 시작" 버튼을 띄운다 (포스터가 보이는 동안)
+  setTimeout(() => {
+    if (!playing && !done && startBtn) startBtn.classList.remove("hidden");
+  }, 300);
+
+  // 재생이 실제로 시작되면 안내 전환
+  video.addEventListener("playing", markPlaying);
+  video.addEventListener("ended", goToStart);
+  video.addEventListener("error", goToStart);
+
+  if (startBtn) {
+    startBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      tryPlay();
     });
   }
 
-  soundBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    enableSound();
+  // 첫 탭 = 재생 시작 / 재생 중 탭 = 건너뛰기
+  screen.addEventListener("click", () => {
+    if (!playing) tryPlay();
+    else goToStart();
   });
-
-  // 재생 중 화면 아무 곳이나 터치하면 건너뛰기
-  screen.addEventListener("click", goToStart);
-  skipBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    goToStart();
-  });
-
-  video.addEventListener("ended", goToStart);
-  video.addEventListener("error", goToStart);
 });
