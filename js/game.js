@@ -16,7 +16,7 @@ function createInitialGameState(playerConfigs, settings = {}) {
   const maxTurns = settings.maxTurns ?? DEFAULT_MAX_TURNS;
 
   const players = playerConfigs.map((cfg, i) =>
-    createPlayer(i, cfg.name, cfg.character, PLAYER_COLORS[i % PLAYER_COLORS.length], startMoney)
+    createPlayer(i, cfg.name, cfg.character, PLAYER_COLORS[i % PLAYER_COLORS.length], startMoney, cfg.isAI)
   );
 
   const { tiles } = buildBoardTiles();

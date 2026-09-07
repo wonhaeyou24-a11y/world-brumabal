@@ -42,9 +42,22 @@ function renderSetupForm(count) {
         ${PLAYER_CHARACTERS.map((c) => `<option value="${c}">${c}</option>`).join("")}
       </select>
       <input data-role="name" data-index="${i}" type="text" maxlength="8" placeholder="플레이어 ${i + 1} 이름" value="${DEFAULT_NAMES[i] || "플레이어 " + (i + 1)}" />
+      <button type="button" class="ai-toggle" data-role="ai" data-index="${i}" aria-pressed="false" title="AI가 대신 플레이">🤖</button>
     `;
     wrap.appendChild(row);
   }
+
+  wrap.querySelectorAll('.ai-toggle').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const on = btn.getAttribute("aria-pressed") !== "true";
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.classList.toggle("is-on", on);
+      const row = btn.closest(".player-form-row");
+      row.querySelector('input[data-role="name"]').value = on
+        ? `AI ${Number(btn.dataset.index) + 1}`
+        : DEFAULT_NAMES[btn.dataset.index] || `플레이어 ${Number(btn.dataset.index) + 1}`;
+    });
+  });
   // 캐릭터 기본값을 서로 다르게
   wrap.querySelectorAll('select[data-role="character"]').forEach((sel, idx) => {
     sel.value = PLAYER_CHARACTERS[idx % PLAYER_CHARACTERS.length];
@@ -57,9 +70,11 @@ const DEFAULT_NAMES = ["시우", "아빠", "엄마", "친구"];
 function readSetupPlayerConfigs() {
   const names = Array.from(document.querySelectorAll('input[data-role="name"]'));
   const chars = Array.from(document.querySelectorAll('select[data-role="character"]'));
+  const ais = Array.from(document.querySelectorAll('.ai-toggle[data-role="ai"]'));
   return names.map((input, i) => ({
     name: input.value.trim() || `플레이어 ${i + 1}`,
     character: chars[i].value,
+    isAI: ais[i] ? ais[i].getAttribute("aria-pressed") === "true" : false,
   }));
 }
 
@@ -200,7 +215,8 @@ function flashMoney(playerId, delta) {
 
 function renderTopbar(gameState) {
   const current = getCurrentPlayer(gameState);
-  document.getElementById("turn-indicator").textContent = `${current.character} ${current.name}의 차례!`;
+  const tag = current.isAI ? " 🤖" : "";
+  document.getElementById("turn-indicator").textContent = `${current.character} ${current.name}의 차례!${tag}`;
   document.getElementById("turn-counter").textContent = `${gameState.turn} / ${gameState.maxTurns}턴`;
 }
 
@@ -208,6 +224,17 @@ function renderGameScreen(gameState) {
   renderTopbar(gameState);
   renderPlayerPanel(gameState);
   renderBoardDynamic(gameState);
+
+  const current = getCurrentPlayer(gameState);
+  const diceBtn = document.getElementById("dice-btn");
+  const hint = document.getElementById("dice-hint");
+  if (current.isAI) {
+    diceBtn.disabled = true;
+    hint.textContent = "🤖 AI가 생각 중…";
+  } else {
+    diceBtn.disabled = false;
+    if (hint.textContent === "🤖 AI가 생각 중…") hint.textContent = "";
+  }
 }
 
 /* ---------------------------------------------------------

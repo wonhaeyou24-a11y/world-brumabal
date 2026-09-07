@@ -45,6 +45,7 @@ function bindStartScreen() {
     buildBoardDOMOnce();
     renderGameScreen(window.gameState);
     showScreen("screen-game");
+    startAILoop();
   });
 
   document.getElementById("btn-collection").addEventListener("click", () => {
@@ -115,6 +116,7 @@ function bindSetupScreen() {
     renderGameScreen(window.gameState);
     saveGame(window.gameState);
     showScreen("screen-game");
+    startAILoop();
   });
 }
 
@@ -564,6 +566,80 @@ function bindResultScreen() {
     showScreen("screen-start");
     document.getElementById("btn-continue").disabled = true;
   });
+}
+
+/* ---------------------------------------------------------
+   AI 플레이어 드라이버
+   - 게임 화면이 켜져 있는 동안 주기적으로 동작
+   - 현재 플레이어가 AI일 때만 주사위/모달을 대신 처리한다
+--------------------------------------------------------- */
+let aiLoopTimer = null;
+
+function startAILoop() {
+  if (aiLoopTimer) return;
+  aiLoopTimer = setInterval(aiTick, 950);
+}
+
+/**
+ * 매 틱마다 최대 1개의 "동기" 행동만 한다(주사위 굴리기 또는 모달 버튼 1번 클릭).
+ * 모든 행동이 동기이므로 틱이 겹칠 일이 없고, 느려지면 게임이 천천히 진행될 뿐 멈추지 않는다.
+ */
+function aiTick() {
+  const gs = window.gameState;
+  if (!gs || gs.status !== "playing") return;
+  if (document.getElementById("screen-game").classList.contains("hidden")) return;
+
+  const player = getCurrentPlayer(gs);
+  if (!player || !player.isAI) return;
+  if (gs.isMoving && document.getElementById("modal-overlay").classList.contains("hidden")) {
+    return; // 이동 애니메이션 중 — 기다린다
+  }
+
+  const overlay = document.getElementById("modal-overlay");
+  if (overlay.classList.contains("hidden")) {
+    onDiceClick(); // AI 차례인데 아직 안 굴렸으면 굴린다
+    return;
+  }
+  aiResolveModal(gs, player, overlay);
+}
+
+function aiClick(el) {
+  if (el && !el.disabled) el.click();
+}
+
+function aiResolveModal(gs, player, overlay) {
+  const has = (action) => overlay.querySelector(`[data-action="${action}"]`);
+
+  // 1) 퀴즈 보기가 있으면 답을 고른다
+  if (has("quiz-answer") && pendingQuiz) {
+    const idx = aiQuizChoiceIndex(pendingQuiz.quiz);
+    const btn = overlay.querySelector(`[data-action="quiz-answer"][data-choice-index="${idx}"]`);
+    aiClick(btn || overlay.querySelector('[data-action="quiz-answer"]'));
+    return;
+  }
+
+  // 2) 국가 도착 카드 (구입/퀴즈도전/지나가기)
+  if (has("buy-country") || has("skip-buy")) {
+    const country = pendingArrival ? getCountryById(pendingArrival.countryId) : null;
+    if (country && pendingArrival) {
+      const discounted = getEffectivePrice(country, pendingArrival.discountRate);
+      const full = country.price;
+      if (has("try-purchase-quiz") && !pendingArrival.quizDone &&
+          aiShouldTryPurchaseQuiz(player, full, getEffectivePrice(country, window.QUIZ_CONFIG?.purchaseDiscountRate ?? 0.2))) {
+        aiClick(has("try-purchase-quiz"));
+        return;
+      }
+      if (aiShouldBuy(player, discounted) && has("buy-country") && !has("buy-country").disabled) {
+        aiClick(has("buy-country"));
+        return;
+      }
+    }
+    aiClick(has("skip-buy"));
+    return;
+  }
+
+  // 3) 그 외 진행 버튼은 그냥 누른다
+  aiClick(has("confirm-arrival") || has("quiz-result-to-arrival") || has("close-modal"));
 }
 
 function escapeAttr(str) {

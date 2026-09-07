@@ -3,7 +3,7 @@
  * 플레이어 데이터 모델.
  */
 
-function createPlayer(id, name, character, color, startMoney) {
+function createPlayer(id, name, character, color, startMoney, isAI = false) {
   return {
     id,                    // 플레이어 고유 ID (0, 1, 2, 3)
     name,                  // 플레이어 이름
@@ -13,6 +13,7 @@ function createPlayer(id, name, character, color, startMoney) {
     position: 0,           // 게임판 칸 인덱스 (0 = START)
     ownedCountries: [],    // 소유 국가 ID 배열
     isBankrupt: false,     // 파산 여부 (2차 개발 확장용, 현재는 항상 false)
+    isAI: !!isAI,          // AI가 대신 플레이하는 플레이어인지
   };
 }
 
