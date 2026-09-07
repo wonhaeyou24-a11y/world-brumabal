@@ -1,0 +1,26 @@
+{
+  "name": "세계여행 브루마블",
+  "short_name": "세계여행",
+  "description": "아이와 부모가 함께 즐기는 세계 나라·수도·국기 보드게임",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#3DBBFF",
+  "theme_color": "#3DBBFF",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

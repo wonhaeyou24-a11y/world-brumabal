@@ -1,0 +1,315 @@
+/* ==========================================================
+   style.css
+   디자인 토큰 + 리셋 + 시작/설정 화면
+   컬러 팔레트:
+     --sky      : #3DBBFF (하늘/기본 브랜드 색)
+     --sun      : #FFC94D (해/포인트 색)
+     --grass    : #4CC97C (초원/성공)
+     --coral    : #FF7A59 (주요 액션 버튼)
+     --navy     : #1F2A44 (텍스트)
+     --cream    : #FFF8EC (배경)
+   타이포그래피: 'Jua'(제목/포인트, 한글 손글씨 느낌) + 'Gowun Dodum'(본문)
+   ========================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap");
+
+:root {
+  --sky: #3dbbff;
+  --sky-deep: #1f8fe0;
+  --sun: #ffc94d;
+  --grass: #4cc97c;
+  --coral: #ff7a59;
+  --navy: #1f2a44;
+  --cream: #fff8ec;
+  --white: #ffffff;
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --shadow-soft: 0 6px 0 rgba(31, 42, 68, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: linear-gradient(180deg, var(--sky) 0%, #8fd9ff 45%, var(--cream) 45%, var(--cream) 100%);
+  font-family: "Gowun Dodum", sans-serif;
+  color: var(--navy);
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, .display {
+  font-family: "Jua", sans-serif;
+  font-weight: 400;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 2px;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 32px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- 공용 버튼 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 28px;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-family: "Jua", sans-serif;
+  min-height: 56px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.08s ease;
+}
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(31, 42, 68, 0.12);
+}
+.btn-primary {
+  background: var(--coral);
+  color: var(--white);
+}
+.btn-secondary {
+  background: var(--white);
+  color: var(--navy);
+  border: 2px solid rgba(31, 42, 68, 0.12);
+}
+.btn-block {
+  width: 100%;
+  max-width: 360px;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- 시작 화면 ---------- */
+#screen-start {
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+}
+.start-globe {
+  font-size: 4.5rem;
+  line-height: 1;
+}
+.start-title {
+  font-size: 2.1rem;
+  color: var(--navy);
+}
+.start-subtitle {
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: var(--navy);
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+.start-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+  margin-top: 8px;
+}
+
+/* ---------- 설정 화면 ---------- */
+.setup-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.setup-title {
+  font-size: 1.5rem;
+  text-align: center;
+}
+.player-count-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.count-chip {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--cream);
+  border: 2px solid rgba(31, 42, 68, 0.1);
+  font-family: "Jua", sans-serif;
+  font-size: 1.2rem;
+  color: var(--navy);
+}
+.count-chip.active {
+  background: var(--sun);
+  border-color: var(--sun);
+}
+.player-form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cream);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+.player-form-row select {
+  font-size: 1.4rem;
+  border: none;
+  background: transparent;
+  width: 56px;
+}
+.player-form-row input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-family: "Gowun Dodum", sans-serif;
+  font-size: 1.05rem;
+  padding: 8px 4px;
+  color: var(--navy);
+}
+.player-form-row input:focus {
+  outline: none;
+}
+.player-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.setup-money-hint {
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+/* ---------- 결과 화면 ---------- */
+#screen-result {
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+.result-list {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-soft);
+  text-align: left;
+}
+.result-rank {
+  font-family: "Jua", sans-serif;
+  font-size: 1.3rem;
+  width: 34px;
+}
+.result-name {
+  font-weight: bold;
+  flex: 1;
+}
+.result-detail {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------- 여행 도감 화면 ---------- */
+#screen-collection {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.collection-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.collection-progress {
+  margin-top: 6px;
+  font-family: "Jua", sans-serif;
+  font-size: 1.05rem;
+  color: var(--sky-deep);
+}
+.collection-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+.collection-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 12px 8px;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.collection-card.is-locked {
+  background: #eef1f5;
+  box-shadow: none;
+  opacity: 0.8;
+}
+.collection-flag {
+  font-size: 2rem;
+  line-height: 1;
+}
+.collection-name {
+  font-family: "Jua", sans-serif;
+  font-size: 0.95rem;
+}
+.collection-capital {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.collection-meta {
+  font-size: 0.68rem;
+  opacity: 0.55;
+}

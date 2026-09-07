@@ -1,0 +1,140 @@
+/* ==========================================================
+   board.css
+   ========================================================== */
+
+#board-wrapper {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.board {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+}
+
+.board-center {
+  grid-row: 2 / -2;
+  grid-column: 2 / -2;
+  background: radial-gradient(circle at 50% 40%, #ffffff 0%, #eaf8ff 70%, #d8f1ff 100%);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: 8px;
+}
+.board-center .center-globe {
+  font-size: clamp(1.8rem, 6vw, 3rem);
+}
+.board-center .center-title {
+  font-family: "Jua", sans-serif;
+  font-size: clamp(0.9rem, 3vw, 1.4rem);
+  color: var(--sky-deep);
+}
+.board-center .center-turn {
+  font-size: clamp(0.65rem, 2.2vw, 0.9rem);
+  opacity: 0.7;
+}
+
+.tile {
+  position: relative;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 2px;
+  box-shadow: 0 2px 0 rgba(31, 42, 68, 0.08);
+  min-width: 0;
+  min-height: 0;
+}
+
+.tile-flag {
+  font-size: clamp(0.9rem, 3.2vw, 1.5rem);
+  line-height: 1;
+}
+.tile-name {
+  font-size: clamp(0.45rem, 1.7vw, 0.68rem);
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  color: var(--navy);
+}
+.tile-capital {
+  font-size: clamp(0.4rem, 1.4vw, 0.58rem);
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.tile-price {
+  font-size: clamp(0.4rem, 1.4vw, 0.55rem);
+  color: var(--sky-deep);
+  font-weight: bold;
+}
+
+.tile--start {
+  background: var(--sun);
+}
+.tile--rest {
+  background: #eaf8ff;
+}
+.tile--rest .tile-flag {
+  font-size: clamp(0.9rem, 3vw, 1.3rem);
+}
+.tile--event {
+  background: linear-gradient(160deg, #fff2c9 0%, #ffe08a 100%);
+}
+.tile--event .tile-name {
+  color: #a9720d;
+}
+
+.tile-owner-bar {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  display: flex;
+  justify-content: center;
+}
+.tile-owner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid white;
+}
+
+.tile-tokens {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  max-width: 60%;
+  justify-content: flex-end;
+}
+.tile-token {
+  font-size: clamp(0.6rem, 2.2vw, 0.95rem);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+  transition: transform 0.15s ease;
+}
+
+.tile--current-player {
+  outline: 3px solid var(--coral);
+  outline-offset: -2px;
+}
