@@ -4,7 +4,7 @@
  * CACHE_VERSION을 올리면 이전 캐시를 지우고 새 리소스로 교체한다(업데이트 안 되는 문제 방지).
  */
 
-const CACHE_VERSION = "world-brumabal-v9";
+const CACHE_VERSION = "world-brumabal-v10";
 
 const CORE_ASSETS = [
   "./",
@@ -35,16 +35,29 @@ const CORE_ASSETS = [
   "./js/game.js",
   "./js/ui.js",
   "./js/main.js",
+  "./js/intro.js",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/pieces/siu.png",
   "./assets/pieces/dad.png",
   "./assets/pieces/mom.png",
+  "./assets/intro/intro-poster.jpg",
 ];
+
+// 설치 시점에 필수는 아니지만 있으면 캐시해 두는 것(용량 큰 영상 등) — 실패해도 설치는 계속
+const EXTRA_ASSETS = ["./assets/intro/intro.mp4"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_VERSION)
+      .then((cache) =>
+        cache.addAll(CORE_ASSETS).then(() =>
+          // 큰 부가 리소스는 개별적으로, 실패는 무시
+          Promise.all(EXTRA_ASSETS.map((url) => cache.add(url).catch(() => {})))
+        )
+      )
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -84,8 +97,11 @@ self.addEventListener("fetch", (event) => {
       if (cached) return cached;
       return fetch(req)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
+          // 206(부분 응답, 영상 스트리밍 등)이나 오류 응답은 캐시하지 않는다
+          if (response && response.ok && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone)).catch(() => {});
+          }
           return response;
         })
         .catch(() => cached);

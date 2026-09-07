@@ -20,8 +20,21 @@
 <body>
 <div id="app">
 
+  <!-- ========== 인트로 영상 ========== -->
+  <section id="screen-intro" class="screen">
+    <video id="intro-video" class="intro-video" playsinline preload="auto"
+           poster="assets/intro/intro-poster.jpg">
+      <source src="assets/intro/intro.mp4" type="video/mp4" />
+    </video>
+    <button id="intro-start" class="intro-start-btn">
+      <span class="intro-play">▶</span>
+      <span class="intro-start-text">눌러서 시작</span>
+    </button>
+    <button id="intro-skip" class="intro-skip-btn hidden">건너뛰기 ⏭</button>
+  </section>
+
   <!-- ========== 시작 화면 ========== -->
-  <section id="screen-start" class="screen">
+  <section id="screen-start" class="screen hidden">
     <button id="btn-settings" class="corner-btn" title="소리·애니메이션 설정" aria-label="설정">⚙️</button>
     <div class="start-globe">🌎</div>
     <h1 class="start-title">세계여행 브루마블</h1>
@@ -31,6 +44,7 @@
       <button id="btn-continue" class="btn btn-secondary btn-block">이어하기</button>
       <button id="btn-collection" class="btn btn-secondary btn-block">🧳 여행 도감</button>
       <button id="btn-how-to-play" class="btn btn-secondary btn-block">게임 방법</button>
+      <button id="btn-replay-intro" class="btn btn-secondary btn-block">🎬 인트로 다시보기</button>
     </div>
   </section>
 
@@ -145,6 +159,7 @@
 <!-- 화면 -->
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
+<script src="js/intro.js"></script>
 
 <script>
   if ("serviceWorker" in navigator) {
