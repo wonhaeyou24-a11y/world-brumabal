@@ -30,3 +30,9 @@ css/       style.css board.css game.css mobile.css
 ```
 
 엔진 코드(`js/`)는 나라 수가 바뀌어도 수정할 필요가 없도록 데이터와 분리되어 있습니다.
+
+## 배포
+
+`git push` 하면 GitHub Pages(main 브랜치 루트)가 자동 빌드합니다.
+**JS/CSS를 수정했다면 `service-worker.js`의 `CACHE_VERSION` 숫자를 올려야** 사용자에게 갱신이 반영됩니다.
+(HTML 진입은 네트워크 우선이라 즉시 반영, 정적 리소스는 캐시 우선)
