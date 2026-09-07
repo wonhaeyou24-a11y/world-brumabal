@@ -4,7 +4,7 @@
  * CACHE_VERSION을 올리면 이전 캐시를 지우고 새 리소스로 교체한다(업데이트 안 되는 문제 방지).
  */
 
-const CACHE_VERSION = "world-brumabal-v15";
+const CACHE_VERSION = "world-brumabal-v16";
 
 const CORE_ASSETS = [
   "./",
@@ -42,6 +42,7 @@ const CORE_ASSETS = [
   "./assets/pieces/dad.png",
   "./assets/pieces/mom.png",
   "./assets/intro/intro-poster.jpg",
+  "./assets/bg/world.jpg",
 ];
 
 // 설치 시점에 필수는 아니지만 있으면 캐시해 두는 것(영상·랜드마크 사진) — 실패해도 설치는 계속

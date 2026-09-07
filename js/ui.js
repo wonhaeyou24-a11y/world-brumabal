@@ -245,14 +245,12 @@ function renderBoardDynamic(gameState, opts = {}) {
 /* ---------------------------------------------------------
    플레이어 패널 / 상단바
 --------------------------------------------------------- */
-const expandedPlayers = new Set(); // 소유 국가 파일철을 펼쳐 놓은 플레이어
-
 function ownedFolderHTML(player) {
   const owned = player.ownedCountries
     .map((id) => getCountryById(id))
     .filter(Boolean);
   if (owned.length === 0) {
-    return `<div class="owned-folder"><div class="owned-empty">아직 산 나라가 없어요</div></div>`;
+    return `<div class="owned-folder is-empty"><div class="owned-empty">아직 산 나라가 없어요</div></div>`;
   }
   const tabs = owned
     .map(
@@ -272,15 +270,14 @@ function renderPlayerPanel(gameState) {
     .map((p, i) => {
       const isCurrent = i === gameState.currentPlayerIndex;
       const count = p.ownedCountries.length;
-      const expanded = expandedPlayers.has(p.id);
       const status = isCurrent ? "내 차례!" : "여행 중";
       return `
-        <div class="player-card ${isCurrent ? "is-current" : ""} ${expanded ? "is-expanded" : ""}"
+        <div class="player-card ${isCurrent ? "is-current" : ""}"
              data-player-id="${p.id}" style="--chip-color:${p.color}">
-          <button type="button" class="pc-main" data-action="toggle-owned" data-player-id="${p.id}">
+          <div class="pc-main">
             <span class="pc-avatar">
               ${pieceMarkup(playerPiece(p), "lg")}
-              <span class="pc-avatar-name">${escapeHtml(p.name)}</span>
+              <span class="pc-avatar-name">${escapeHtml(p.name)}${p.isAI ? " 🤖" : ""}</span>
             </span>
             <div class="pc-body">
               <div class="pc-tags">
@@ -289,22 +286,16 @@ function renderPlayerPanel(gameState) {
               <div class="pc-money">💰 ${won(p.money)}</div>
               <div class="pc-sub">
                 <span>🎴 스페셜 0</span>
-                <span class="pc-status ${isCurrent ? "on" : ""}">${p.isAI ? "🤖 " : ""}${status}</span>
+                <span class="pc-status ${isCurrent ? "on" : ""}">${status}</span>
               </div>
             </div>
-            <span class="pc-caret">▾</span>
-          </button>
+          </div>
+          <div class="pc-owned-label">보유 나라 ${count}개</div>
           ${ownedFolderHTML(p)}
         </div>
       `;
     })
     .join("");
-}
-
-function togglePlayerOwned(playerId) {
-  if (expandedPlayers.has(playerId)) expandedPlayers.delete(playerId);
-  else expandedPlayers.add(playerId);
-  if (window.gameState) renderPlayerPanel(window.gameState);
 }
 
 /** 플레이어 카드 위에 +46만원 / -12만원 같은 뱃지를 잠깐 띄운다 */
@@ -453,6 +444,38 @@ function buildCountryCard(country, opts = {}) {
 }
 
 /* ---------------------------------------------------------
+   임팩트 연출 (국가 구입 / 통행료)
+--------------------------------------------------------- */
+function showFxBurst(kind, opts = {}) {
+  const layer = document.getElementById("fx-layer");
+  const done = () => {
+    if (layer) {
+      layer.classList.add("hidden");
+      layer.innerHTML = "";
+      layer.className = "fx-layer hidden";
+    }
+    if (opts.onDone) opts.onDone();
+  };
+  if (!layer) return done();
+
+  const reduced = window.prefersReducedAnim && window.prefersReducedAnim();
+  layer.className = "fx-layer fx-" + kind;
+  const text = escapeHtml(opts.text || (kind === "buy" ? "구입!" : "통행료!"));
+
+  if (kind === "buy") {
+    const confetti = Array.from({ length: 18 }, (_, i) => {
+      const colors = ["#FF7A59", "#3DBBFF", "#4CC97C", "#FFC94D", "#ff5fa2"];
+      return `<i style="--c:${colors[i % 5]};--x:${(Math.random() * 100).toFixed(0)}%;--d:${(Math.random() * 0.3).toFixed(2)}s;--r:${(Math.random() * 360).toFixed(0)}deg"></i>`;
+    }).join("");
+    layer.innerHTML = `<div class="fx-ring"></div><div class="fx-emoji">🎉</div><div class="fx-text">${text}</div><div class="fx-confetti">${confetti}</div>`;
+  } else {
+    layer.innerHTML = `<div class="fx-flash"></div><div class="fx-emoji">💸</div><div class="fx-text">${text}</div>`;
+  }
+  layer.classList.remove("hidden");
+  setTimeout(done, reduced ? 250 : kind === "buy" ? 1150 : 950);
+}
+
+/* ---------------------------------------------------------
    퀴즈 모달 HTML (보기 버튼은 data-choice-index 로 식별)
 --------------------------------------------------------- */
 function buildQuizModalHTML(quiz, subtitle) {
@@ -488,12 +511,12 @@ window.buildBoardDOMOnce = buildBoardDOMOnce;
 window.renderBoardDynamic = renderBoardDynamic;
 window.renderGameScreen = renderGameScreen;
 window.renderPlayerPanel = renderPlayerPanel;
-window.togglePlayerOwned = togglePlayerOwned;
 window.renderResultScreen = renderResultScreen;
 window.renderCollectionScreen = renderCollectionScreen;
 window.buildQuizModalHTML = buildQuizModalHTML;
 window.buildCountryCard = buildCountryCard;
 window.landmarkImgHTML = landmarkImgHTML;
 window.flagMarkup = flagMarkup;
+window.showFxBurst = showFxBurst;
 window.flashMoney = flashMoney;
 window.getBoardTiles = () => currentBoardTiles;

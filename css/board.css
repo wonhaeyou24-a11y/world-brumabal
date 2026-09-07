@@ -24,10 +24,11 @@
   pointer-events: none;
 }
 .ds-card {
-  background: var(--white);
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
   border-radius: var(--radius-lg);
-  box-shadow: 0 16px 40px rgba(31, 42, 68, 0.28), inset 0 0 0 3px var(--sun);
-  padding: 5cqmin 5cqmin 4cqmin;
+  box-shadow: 0 24px 60px rgba(31, 42, 68, 0.4), 0 0 0 4px var(--sun),
+    inset 0 3px 0 rgba(255, 255, 255, 0.95);
+  padding: 5.5cqmin 5.5cqmin 4.5cqmin;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,12 +42,18 @@
 .ds-turn {
   display: flex;
   align-items: center;
-  gap: 2.5cqmin;
+  gap: 3cqmin;
   font-family: "Jua", sans-serif;
-  font-size: clamp(0.9rem, 4cqmin, 1.6rem);
+  font-size: clamp(1rem, 4.4cqmin, 1.8rem);
   color: var(--navy);
 }
-.ds-turn .piece--lg { width: clamp(2rem, 9cqmin, 3.6rem); height: clamp(2rem, 9cqmin, 3.6rem); }
+.ds-turn .piece--lg {
+  width: clamp(3rem, 13cqmin, 5.4rem);
+  height: clamp(3rem, 13cqmin, 5.4rem);
+}
+.ds-turn .piece--lg .piece-photo:not(.is-missing) {
+  box-shadow: 0 0 0 3px var(--white), 0 0 0 6px var(--piece-color), 0 6px 14px rgba(31, 42, 68, 0.3);
+}
 
 .ds-btn {
   position: relative;
@@ -273,30 +280,62 @@
   font-size: calc(var(--tok-size) * 0.9);
 }
 .tile-token .token-head .piece .piece-photo:not(.is-missing) {
-  box-shadow: 0 0 0 2px var(--white), 0 0 0 3.5px var(--tok-color);
+  box-shadow: 0 0 0 2px var(--white), 0 0 0 3.5px var(--tok-color), 0 0 0 4.5px rgba(31, 42, 68, 0.5);
+}
+.tile-token .token-head .piece-fallback {
+  filter: drop-shadow(0 0 1px rgba(31, 42, 68, 0.7));
 }
 
-/* 몸통 + 다리 */
+/* 몸통 + 다리 (외곽선 + 셔츠 무늬로 입체감) */
 .token-body {
   position: relative;
-  width: 62%;
-  height: calc(var(--tok-size) * 0.5);
-  margin-top: -8%;
-  background: var(--tok-color);
-  border-radius: 40% 40% 30% 30%;
+  width: 74%;
+  height: calc(var(--tok-size) * 0.58);
+  margin-top: -10%;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tok-color) 78%, white) 0%,
+    var(--tok-color) 55%,
+    color-mix(in srgb, var(--tok-color) 75%, black) 100%);
+  border: max(1px, 0.5cqmin) solid rgba(31, 42, 68, 0.55);
+  border-radius: 45% 45% 32% 32%;
+  box-shadow: inset 0 15% 0 rgba(255, 255, 255, 0.35), 0 3px 4px rgba(31, 42, 68, 0.3);
   z-index: 1;
+}
+/* 셔츠 단추(패션 포인트) */
+.token-body::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  width: 12%;
+  height: 55%;
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,0.85) 0 22%, transparent 22% 44%);
+  border-radius: 2px;
 }
 .token-leg {
   position: absolute;
-  bottom: -42%;
-  width: 26%;
-  height: 55%;
-  background: var(--tok-color);
-  border-radius: 40%;
+  bottom: -46%;
+  width: 30%;
+  height: 60%;
+  background: linear-gradient(180deg, var(--tok-color) 0%, color-mix(in srgb, var(--tok-color) 70%, black) 100%);
+  border: max(1px, 0.5cqmin) solid rgba(31, 42, 68, 0.55);
+  border-radius: 35% 35% 45% 45%;
   transform-origin: top center;
 }
-.token-leg:nth-child(1) { left: 14%; }
-.token-leg:nth-child(2) { right: 14%; }
+/* 신발 */
+.token-leg::after {
+  content: "";
+  position: absolute;
+  left: -12%;
+  bottom: -8%;
+  width: 124%;
+  height: 42%;
+  background: #37414f;
+  border-radius: 40% 55% 45% 45%;
+}
+.token-leg:nth-child(1) { left: 10%; }
+.token-leg:nth-child(2) { right: 10%; }
 /* 말 밑 그림자 */
 .tile-token::after {
   content: "";

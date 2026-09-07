@@ -168,12 +168,7 @@ function bindGameScreen() {
 
   document.getElementById("player-panel").addEventListener("click", (e) => {
     const tab = e.target.closest(".owned-tab[data-country-id]");
-    if (tab) {
-      showOwnedCountryCard(tab.dataset.countryId);
-      return;
-    }
-    const btn = e.target.closest('[data-action="toggle-owned"]');
-    if (btn) togglePlayerOwned(Number(btn.dataset.playerId));
+    if (tab) showOwnedCountryCard(tab.dataset.countryId);
   });
 
   // 모달 안의 버튼은 동적으로 생성되므로 이벤트 위임으로 처리
@@ -383,15 +378,19 @@ function handleArrival() {
     const result = payRentIfNeeded(gs, gs.players, player, tile.countryId);
     renderPlayerPanel(gs);
     if (window.flashMoney) { flashMoney(player.id, -result.amount); flashMoney(owner.id, result.amount); }
-    if (window.playSound) window.playSound("coinLoss");
-    showModal(`
+    if (window.playSound) window.playSound("rentImpact");
+    const rentModalHTML = `
       ${buildCountryCard(country, { travelerName: player.name, ownerName: owner.name, myMoney: player.money })}
       <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-${won(result.amount)}</span></div>
       <div class="modal-rent-row positive"><span>${pcMarkup(owner)} ${escapeAttr(owner.name)}</span><span>+${won(result.amount)}</span></div>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
-    `);
+    `;
+    showFxBurst("rent", {
+      text: `${owner.name}에게 통행료 ${won(result.amount)}!`,
+      onDone: () => showModal(rentModalHTML),
+    });
   }
 }
 
@@ -589,15 +588,19 @@ function handleBuyDecision(wantsToBuy) {
       renderPlayerPanel(gs);
       saveGame(gs);
       if (window.flashMoney) flashMoney(player.id, -getEffectivePrice(country, discountRate));
-      if (window.playSound) window.playSound("buy");
-      showModal(`
+      if (window.playSound) window.playSound("buyFanfare");
+      const buyModalHTML = `
         ${buildCountryCard(country, { travelerName: player.name, ownerName: `${player.name}(나)`, myMoney: player.money })}
         <h3 class="modal-title" style="color:var(--grass)">구매 완료! 🎉</h3>
-        <p class="modal-message">${country.nameKo}이(가) 이제 내 나라예요</p>
+        <p class="modal-message">${escapeAttr(country.nameKo)}이(가) 이제 내 나라예요</p>
         <div class="modal-actions">
           <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
         </div>
-      `);
+      `;
+      showFxBurst("buy", {
+        text: `${country.nameKo} 구입!`,
+        onDone: () => showModal(buyModalHTML),
+      });
       return;
     }
   }
