@@ -167,6 +167,13 @@
 
 <script>
   if ("serviceWorker" in navigator) {
+    // 새 버전이 배포되면 서비스워커가 교체되는 즉시 한 번 새로고침해서 바로 반영
+    let swRefreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (swRefreshing) return;
+      swRefreshing = true;
+      window.location.reload();
+    });
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("service-worker.js").catch((err) => {
         console.warn("서비스워커 등록 실패(파일을 file://로 직접 열면 정상, http(s) 서버에서는 자동 등록):", err);

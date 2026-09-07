@@ -4,7 +4,7 @@
  * CACHE_VERSION을 올리면 이전 캐시를 지우고 새 리소스로 교체한다(업데이트 안 되는 문제 방지).
  */
 
-const CACHE_VERSION = "world-brumabal-v28";
+const CACHE_VERSION = "world-brumabal-v29";
 
 const CORE_ASSETS = [
   "./",
@@ -88,25 +88,31 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const req = event.request;
+  const url = new URL(req.url);
   const isHTML =
     req.mode === "navigate" ||
     (req.headers.get("accept") || "").includes("text/html");
+  // 코드(HTML/CSS/JS/JSON)는 네트워크 우선 → 배포하면 새로고침 한 번으로 바로 반영
+  const isCode = /\.(css|js|json)$/i.test(url.pathname);
 
-  // HTML(화면 진입)은 네트워크 우선 → 배포 즉시 반영, 오프라인이면 캐시로 폴백
-  if (isHTML) {
+  if (isHTML || isCode) {
     event.respondWith(
       fetch(req)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
+          if (response && response.ok && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone)).catch(() => {});
+          }
           return response;
         })
-        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
+        .catch(() =>
+          caches.match(req).then((c) => c || (isHTML ? caches.match("./index.html") : undefined))
+        )
     );
     return;
   }
 
-  // 그 외 정적 리소스는 캐시 우선
+  // 그 외 정적 리소스(이미지·폰트·영상)는 캐시 우선
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;

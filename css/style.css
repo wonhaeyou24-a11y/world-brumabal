@@ -30,6 +30,24 @@
 
 * {
   box-sizing: border-box;
+  /* 게임 화면: 길게 눌러도 글자 블록지정·컨텍스트 메뉴가 뜨지 않게 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* 입력·선택 요소만 예외로 정상 동작 */
+input,
+textarea,
+select,
+option,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 /* ---------- 국기 이미지 (SVG, 없으면 이모지) ---------- */
@@ -59,19 +77,6 @@ body {
   color: var(--navy);
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  /* 길게 누를 때 텍스트 블록지정·이미지 저장 팝업이 뜨지 않도록 (게임용) */
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-/* 입력·선택 요소는 정상 동작하도록 예외 */
-input,
-textarea,
-select {
-  -webkit-user-select: auto;
-  -moz-user-select: auto;
-  user-select: auto;
 }
 /* 버튼·칸 등은 더블탭 확대/지연 없이 즉시 반응, 이미지 드래그 금지 */
 button,
