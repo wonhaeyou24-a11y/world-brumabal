@@ -15,18 +15,27 @@ function rollDiceValue() {
  * onFinish(finalValue): 애니메이션 종료 후 호출
  */
 function playDiceAnimation(diceEl, onFinish) {
+  if (window.playSound) window.playSound("dice");
+
+  const finalValue = rollDiceValue();
+  const reduced = window.prefersReducedAnim && window.prefersReducedAnim();
+
+  if (reduced) {
+    diceEl.textContent = DICE_FACES[finalValue - 1];
+    setTimeout(() => onFinish(finalValue), 200);
+    return;
+  }
+
   let ticks = 0;
   const maxTicks = 10;
   const shakeTarget = diceEl.closest(".dice-btn") || diceEl;
   shakeTarget.classList.add("dice--rolling");
 
   const interval = setInterval(() => {
-    const randomFace = DICE_FACES[Math.floor(Math.random() * 6)];
-    diceEl.textContent = randomFace;
+    diceEl.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
     ticks++;
     if (ticks >= maxTicks) {
       clearInterval(interval);
-      const finalValue = rollDiceValue();
       diceEl.textContent = DICE_FACES[finalValue - 1];
       shakeTarget.classList.remove("dice--rolling");
       onFinish(finalValue);

@@ -82,3 +82,12 @@
     transition: none;
   }
 }
+
+/* 사용자가 설정에서 애니메이션을 끈 경우 */
+body.no-anim *,
+body.no-anim *::before,
+body.no-anim *::after {
+  animation-duration: 0.001s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0.001s !important;
+}

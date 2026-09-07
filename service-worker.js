@@ -4,7 +4,7 @@
  * CACHE_VERSION을 올리면 이전 캐시를 지우고 새 리소스로 교체한다(업데이트 안 되는 문제 방지).
  */
 
-const CACHE_VERSION = "world-brumabal-v2";
+const CACHE_VERSION = "world-brumabal-v3";
 
 const CORE_ASSETS = [
   "./",
@@ -24,6 +24,8 @@ const CORE_ASSETS = [
   "./js/property.js",
   "./js/quiz.js",
   "./js/event.js",
+  "./js/settings.js",
+  "./js/sound.js",
   "./js/storage.js",
   "./js/game.js",
   "./js/ui.js",

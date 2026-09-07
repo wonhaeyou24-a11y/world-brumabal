@@ -7,9 +7,12 @@
 
 window.gameState = null;
 let selectedPlayerCount = 2;
+let selectedStartMoney = 1000;
+let selectedMaxTurns = 24;
 let collectionReturnScreen = "screen-start"; // 도감에서 "뒤로" 눌렀을 때 돌아갈 화면
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (window.applySettingsToDocument) applySettingsToDocument();
   bindStartScreen();
   bindSetupScreen();
   bindGameScreen();
@@ -25,6 +28,7 @@ function bindStartScreen() {
   continueBtn.disabled = !hasSavedGame();
 
   document.getElementById("btn-new-game").addEventListener("click", () => {
+    if (window.unlockAudio) window.unlockAudio();
     selectedPlayerCount = 2;
     document.querySelectorAll(".count-chip").forEach((chip) => {
       chip.classList.toggle("active", Number(chip.dataset.count) === selectedPlayerCount);
@@ -34,6 +38,7 @@ function bindStartScreen() {
   });
 
   continueBtn.addEventListener("click", () => {
+    if (window.unlockAudio) window.unlockAudio();
     const saved = loadGame();
     if (!saved) return;
     window.gameState = saved;
@@ -46,6 +51,11 @@ function bindStartScreen() {
     collectionReturnScreen = "screen-start";
     renderCollectionScreen(null);
     showScreen("screen-collection");
+  });
+
+  document.getElementById("btn-settings").addEventListener("click", () => {
+    if (window.unlockAudio) window.unlockAudio();
+    showSettingsModal();
   });
 
   document.getElementById("btn-how-to-play").addEventListener("click", () => {
@@ -79,13 +89,28 @@ function bindSetupScreen() {
     });
   });
 
+  document.querySelectorAll(".option-chip-row").forEach((rowEl) => {
+    rowEl.addEventListener("click", (e) => {
+      const chip = e.target.closest(".option-chip");
+      if (!chip) return;
+      rowEl.querySelectorAll(".option-chip").forEach((c) => c.classList.toggle("active", c === chip));
+      const value = Number(chip.dataset.value);
+      if (rowEl.dataset.group === "money") selectedStartMoney = value;
+      else if (rowEl.dataset.group === "turns") selectedMaxTurns = value;
+    });
+  });
+
   document.getElementById("btn-back-to-start").addEventListener("click", () => {
     showScreen("screen-start");
   });
 
   document.getElementById("btn-start-playing").addEventListener("click", () => {
+    if (window.unlockAudio) window.unlockAudio();
     const configs = readSetupPlayerConfigs();
-    window.gameState = createInitialGameState(configs);
+    window.gameState = createInitialGameState(configs, {
+      startMoney: selectedStartMoney,
+      maxTurns: selectedMaxTurns,
+    });
     buildBoardDOMOnce();
     renderGameScreen(window.gameState);
     saveGame(window.gameState);
@@ -126,8 +151,37 @@ function bindGameScreen() {
       handleQuizAnswer(Number(btn.dataset.choiceIndex));
     } else if (action === "quiz-result-to-arrival") {
       showArrivalCard();
+    } else if (action === "toggle-sound") {
+      const next = saveSettings({ soundOn: !loadSettings().soundOn });
+      if (next.soundOn && window.unlockAudio) { window.unlockAudio(); window.playSound && window.playSound("coinGain"); }
+      showSettingsModal();
+    } else if (action === "toggle-anim") {
+      saveSettings({ animOn: !loadSettings().animOn });
+      showSettingsModal();
     }
   });
+}
+
+/* ---------------------------------------------------------
+   환경설정 모달 (소리 / 애니메이션)
+--------------------------------------------------------- */
+function showSettingsModal() {
+  const s = loadSettings();
+  const row = (label, on, action) => `
+    <button class="setting-row" data-action="${action}">
+      <span class="setting-label">${label}</span>
+      <span class="setting-switch ${on ? "is-on" : ""}"><span class="setting-knob"></span></span>
+    </button>`;
+  showModal(`
+    <h3 class="modal-title">⚙️ 설정</h3>
+    <div class="setting-list">
+      ${row("🔊 소리", s.soundOn, "toggle-sound")}
+      ${row("✨ 애니메이션", s.animOn, "toggle-anim")}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" data-action="close-modal">확인</button>
+    </div>
+  `);
 }
 
 let pendingArrival = null; // { countryId, discountRate, quizDone }
@@ -140,6 +194,7 @@ function markVisit(gs, playerId, countryId) {
 }
 
 function onDiceClick() {
+  if (window.unlockAudio) window.unlockAudio();
   const gs = window.gameState;
   if (!gs || gs.isMoving || gs.status === "ended") return;
 
@@ -158,11 +213,19 @@ function animateMove(steps) {
   const gs = window.gameState;
   const player = getCurrentPlayer(gs);
   const boardLength = gs.boardLength;
-  let remaining = steps;
 
+  if (window.prefersReducedAnim && window.prefersReducedAnim()) {
+    player.position = (player.position + steps) % boardLength;
+    renderBoardDynamic(gs);
+    setTimeout(() => handleArrival(), 150);
+    return;
+  }
+
+  let remaining = steps;
   const stepInterval = setInterval(() => {
     player.position = (player.position + 1) % boardLength;
     renderBoardDynamic(gs);
+    if (window.playSound) window.playSound("move");
     remaining--;
     if (remaining <= 0) {
       clearInterval(stepInterval);
@@ -228,6 +291,8 @@ function handleArrival() {
     const owner = gs.players.find((p) => p.id === ownerId);
     const result = payRentIfNeeded(gs, gs.players, player, tile.countryId);
     renderPlayerPanel(gs);
+    if (window.flashMoney) { flashMoney(player.id, -result.amount); flashMoney(owner.id, result.amount); }
+    if (window.playSound) window.playSound("coinLoss");
     showModal(`
       <div class="modal-flag">${country.flag}</div>
       <h3 class="modal-title">${country.nameKo}</h3>
@@ -304,6 +369,8 @@ function handleEventTile() {
     const res = applyMoneyEvent(player, card);
     renderPlayerPanel(gs);
     saveGame(gs);
+    if (window.flashMoney) flashMoney(player.id, res.delta);
+    if (window.playSound) window.playSound(res.delta >= 0 ? "coinGain" : "coinLoss");
     const sign = res.delta >= 0 ? "positive" : "negative";
     const amountText = `${res.delta >= 0 ? "+" : "-"}💰${Math.abs(res.delta)}`;
     showModal(`
@@ -371,6 +438,8 @@ function handleQuizAnswer(choiceIndex) {
   const gs = window.gameState;
   const player = getCurrentPlayer(gs);
 
+  if (window.playSound) window.playSound(correct ? "quizCorrect" : "quizWrong");
+
   if (context === "purchase") {
     pendingQuiz = null;
     if (correct) {
@@ -397,6 +466,7 @@ function handleQuizAnswer(choiceIndex) {
     const res = applyQuizReward(player);
     renderPlayerPanel(gs);
     saveGame(gs);
+    if (window.flashMoney) flashMoney(player.id, res.reward);
     showModal(`
       <div class="modal-flag">🎉</div>
       <h3 class="modal-title">정답이에요!</h3>
@@ -434,6 +504,8 @@ function handleBuyDecision(wantsToBuy) {
       renderBoardDynamic(gs);
       renderPlayerPanel(gs);
       saveGame(gs);
+      if (window.flashMoney) flashMoney(player.id, -getEffectivePrice(country, discountRate));
+      if (window.playSound) window.playSound("buy");
       showModal(`
         <div class="modal-flag">${country.flag}</div>
         <h3 class="modal-title">구매 완료!</h3>
@@ -464,6 +536,7 @@ function finishTurn() {
 
   if (gs.status === "ended") {
     clearSavedGame();
+    if (window.playSound) window.playSound("win");
     renderResultScreen(gs);
     showScreen("screen-result");
     return;

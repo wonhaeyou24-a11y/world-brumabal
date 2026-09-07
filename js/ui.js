@@ -174,7 +174,7 @@ function renderPlayerPanel(gameState) {
     .map((p, i) => {
       const isCurrent = i === gameState.currentPlayerIndex;
       return `
-        <div class="player-chip ${isCurrent ? "is-current" : ""}" style="border-color:${isCurrent ? p.color : "transparent"}">
+        <div class="player-chip ${isCurrent ? "is-current" : ""}" data-player-id="${p.id}" style="border-color:${isCurrent ? p.color : "transparent"}">
           <span class="chip-face">${p.character}</span>
           <div class="chip-info">
             <div class="chip-name">${escapeHtml(p.name)}</div>
@@ -184,6 +184,18 @@ function renderPlayerPanel(gameState) {
       `;
     })
     .join("");
+}
+
+/** 플레이어 칩 위에 +💰50 / -💰40 같은 뱃지를 잠깐 띄운다 */
+function flashMoney(playerId, delta) {
+  if (!delta) return;
+  const chip = document.querySelector(`.player-chip[data-player-id="${playerId}"]`);
+  if (!chip) return;
+  const badge = document.createElement("span");
+  badge.className = "money-flash " + (delta >= 0 ? "gain" : "loss");
+  badge.textContent = `${delta >= 0 ? "+" : "-"}💰${Math.abs(delta)}`;
+  chip.appendChild(badge);
+  setTimeout(() => badge.remove(), 1100);
 }
 
 function renderTopbar(gameState) {
@@ -304,4 +316,5 @@ window.renderGameScreen = renderGameScreen;
 window.renderResultScreen = renderResultScreen;
 window.renderCollectionScreen = renderCollectionScreen;
 window.buildQuizModalHTML = buildQuizModalHTML;
+window.flashMoney = flashMoney;
 window.getBoardTiles = () => currentBoardTiles;

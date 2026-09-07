@@ -123,6 +123,24 @@ button:focus-visible,
   justify-content: center;
   text-align: center;
   gap: 18px;
+  position: relative;
+}
+.corner-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.corner-btn:active {
+  transform: translateY(3px);
 }
 .start-globe {
   font-size: 4.5rem;
@@ -216,10 +234,77 @@ button:focus-visible,
   border-radius: 50%;
   flex-shrink: 0;
 }
-.setup-money-hint {
-  text-align: center;
-  font-size: 0.95rem;
-  opacity: 0.75;
+.setup-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.setup-option-label {
+  font-family: "Jua", sans-serif;
+  font-size: 1.05rem;
+}
+.option-chip-row {
+  display: flex;
+  gap: 8px;
+}
+.option-chip {
+  flex: 1;
+  min-height: 46px;
+  border-radius: 999px;
+  background: var(--cream);
+  border: 2px solid rgba(31, 42, 68, 0.1);
+  font-family: "Jua", sans-serif;
+  font-size: 1rem;
+  color: var(--navy);
+}
+.option-chip.active {
+  background: var(--sun);
+  border-color: var(--sun);
+}
+
+/* ---------- 설정 모달 ---------- */
+.setting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  width: 100%;
+}
+.setting-label {
+  font-family: "Jua", sans-serif;
+  font-size: 1.1rem;
+}
+.setting-switch {
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: #d5dbe3;
+  position: relative;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.setting-switch.is-on {
+  background: var(--grass);
+}
+.setting-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--white);
+  transition: transform 0.15s ease;
+}
+.setting-switch.is-on .setting-knob {
+  transform: translateX(22px);
 }
 
 /* ---------- 결과 화면 ---------- */

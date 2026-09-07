@@ -20,6 +20,7 @@
 
   <!-- ========== 시작 화면 ========== -->
   <section id="screen-start" class="screen">
+    <button id="btn-settings" class="corner-btn" title="소리·애니메이션 설정" aria-label="설정">⚙️</button>
     <div class="start-globe">🌎</div>
     <h1 class="start-title">세계여행 브루마블</h1>
     <p class="start-subtitle">🎲 나라를 여행하고<br />🌍 세계를 배워요!</p>
@@ -41,7 +42,24 @@
         <button class="count-chip" data-count="4">4</button>
       </div>
       <div id="player-form-list"></div>
-      <p class="setup-money-hint">모두 💰1,000으로 시작해요</p>
+
+      <div class="setup-option">
+        <span class="setup-option-label">💰 시작 자금</span>
+        <div class="option-chip-row" data-group="money">
+          <button type="button" class="option-chip" data-value="700">700</button>
+          <button type="button" class="option-chip active" data-value="1000">1,000</button>
+          <button type="button" class="option-chip" data-value="1500">1,500</button>
+        </div>
+      </div>
+      <div class="setup-option">
+        <span class="setup-option-label">🎲 게임 길이</span>
+        <div class="option-chip-row" data-group="turns">
+          <button type="button" class="option-chip" data-value="16">16턴</button>
+          <button type="button" class="option-chip active" data-value="24">24턴</button>
+          <button type="button" class="option-chip" data-value="32">32턴</button>
+        </div>
+      </div>
+
       <button id="btn-start-playing" class="btn btn-primary btn-block">시작하기</button>
       <button id="btn-back-to-start" class="btn btn-secondary btn-block">뒤로</button>
     </div>
@@ -107,6 +125,8 @@
 <script src="js/property.js"></script>
 <script src="js/quiz.js"></script>
 <script src="js/event.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/sound.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/game.js"></script>
 

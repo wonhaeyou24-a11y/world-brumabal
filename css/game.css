@@ -88,6 +88,30 @@
   color: var(--sky-deep);
   font-weight: bold;
 }
+.player-chip { position: relative; }
+.money-flash {
+  position: absolute;
+  right: 8px;
+  top: -6px;
+  font-family: "Jua", sans-serif;
+  font-size: 0.95rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+  animation: money-flash-rise 1.1s ease-out forwards;
+  pointer-events: none;
+  z-index: 60;
+}
+.money-flash.gain { color: var(--grass); }
+.money-flash.loss { color: var(--coral); }
+@keyframes money-flash-rise {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-18px); }
+}
 
 .dice-area {
   display: flex;
