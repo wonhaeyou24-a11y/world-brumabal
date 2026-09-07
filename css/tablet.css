@@ -1,0 +1,135 @@
+/* ==========================================================
+   tablet.css
+   아이패드(태블릿) 우선 레이아웃.
+   가로: 왼쪽 큰 게임판 + 오른쪽 정보 사이드바.
+   세로 태블릿: 게임판을 크게, 정보는 아래.
+   ========================================================== */
+
+/* ---------- 가로 태블릿/데스크톱: 좌 게임판 · 우 사이드바 ---------- */
+@media (min-width: 880px) {
+  #screen-game {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(16px, 3vw, 40px);
+    max-width: 1500px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 16px 24px;
+  }
+
+  #board-wrapper {
+    flex: 0 0 auto;
+    width: min(82vh, 100vw - 460px);
+    height: min(82vh, 100vw - 460px);
+    max-width: 1000px;
+    max-height: 1000px;
+    aspect-ratio: auto;
+    margin: 0;
+  }
+
+  #game-side {
+    flex: 0 1 clamp(300px, 30vw, 420px);
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .game-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 16px 18px;
+    border-radius: var(--radius-lg);
+  }
+  .turn-indicator {
+    font-size: 1.5rem;
+    justify-content: center;
+    text-align: center;
+  }
+  .turn-indicator .turn-name { white-space: normal; }
+  .topbar-right { justify-content: center; gap: 12px; }
+  .turn-counter {
+    font-size: 1.05rem;
+    font-family: "Jua", sans-serif;
+    background: var(--cream);
+    padding: 4px 14px;
+    border-radius: 999px;
+  }
+  .topbar-icon-btn { width: 46px; height: 46px; font-size: 1.35rem; }
+
+  .player-panel {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .player-chip {
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+    gap: 14px;
+    border-width: 4px;
+  }
+  .player-chip .chip-name { font-size: 1.15rem; }
+  .player-chip .chip-money { font-size: 1.25rem; }
+
+  .dice-area { gap: 14px; }
+  .dice-btn {
+    width: clamp(130px, 16vw, 200px);
+    height: clamp(130px, 16vw, 200px);
+    border-radius: 38px;
+    font-size: clamp(3.8rem, 8vw, 6rem);
+  }
+  .dice-hint {
+    font-size: 1.25rem;
+    font-family: "Jua", sans-serif;
+    min-height: 1.4em;
+  }
+}
+
+/* ---------- 세로 태블릿: 게임판을 화면 폭 가득, 정보는 아래 넓게 ---------- */
+@media (min-width: 700px) and (orientation: portrait) {
+  #screen-game {
+    max-width: 900px;
+    padding: 20px;
+    gap: 18px;
+  }
+  #board-wrapper { max-width: 760px; }
+  .turn-indicator { font-size: 1.4rem; }
+  .player-panel { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .player-chip { padding: 14px 16px; }
+  .player-chip .chip-name { font-size: 1.05rem; }
+  .player-chip .chip-money { font-size: 1.15rem; }
+  .dice-btn { width: 130px; height: 130px; font-size: 3.8rem; }
+  .dice-hint { font-size: 1.15rem; }
+}
+
+/* ---------- 큰 화면에서 이벤트 모달도 크고 시원하게 ---------- */
+@media (min-width: 700px) {
+  .modal-content {
+    max-width: 560px;
+    padding: 34px 34px 38px;
+    gap: 20px;
+    border-radius: var(--radius-lg);
+  }
+  .modal-flag { font-size: clamp(3.4rem, 9vw, 5.2rem); }
+  .modal-title { font-size: clamp(1.7rem, 4.5vw, 2.4rem); }
+  .modal-message { font-size: 1.3rem; line-height: 1.7; }
+  .modal-info-grid { gap: 14px; }
+  .modal-info-item { padding: 16px 12px; border-radius: var(--radius-md); }
+  .modal-info-label { font-size: 0.95rem; }
+  .modal-info-value { font-size: 1.5rem; margin-top: 4px; }
+  .modal-actions { gap: 14px; margin-top: 8px; }
+  .modal-actions .btn { min-height: 66px; font-size: 1.25rem; }
+  .modal-rent-row { font-size: 1.3rem; padding: 14px 18px; border-radius: var(--radius-md); }
+  .quiz-choice { min-height: 66px; font-size: 1.3rem; }
+  .quiz-cta { min-height: 58px; font-size: 1.15rem; }
+}
+
+/* ---------- 설정/도감 화면도 태블릿에서 시원하게 ---------- */
+@media (min-width: 700px) {
+  .setup-card { max-width: 620px; padding: 32px 28px; gap: 22px; }
+  .setup-title { font-size: 1.9rem; }
+  .collection-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .collection-card { padding: 16px 12px; }
+  .collection-flag { font-size: 2.8rem; }
+  .collection-name { font-size: 1.2rem; }
+  .collection-capital { font-size: 0.95rem; }
+}

@@ -2,12 +2,20 @@
    game.css
    ========================================================== */
 
+/* 세로(휴대폰·태블릿 세로) 기본 레이아웃: 게임판 위, 사이드가 아래로 흐름 */
 #screen-game {
+  flex-direction: column;
   padding: 12px 10px 16px;
-  gap: 10px;
+  gap: 12px;
   max-width: 680px;
   margin: 0 auto;
   width: 100%;
+}
+#game-side {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .game-topbar {
@@ -15,17 +23,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   background: var(--white);
   border-radius: 999px;
-  padding: 10px 18px;
+  padding: 10px 16px;
   box-shadow: var(--shadow-soft);
 }
 .turn-indicator {
   font-family: "Jua", sans-serif;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+.turn-indicator .turn-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .topbar-right {
   display: flex;
@@ -71,7 +86,8 @@
   border-color: var(--sun);
 }
 .player-chip .chip-face {
-  font-size: 1.4rem;
+  display: inline-flex;
+  flex-shrink: 0;
 }
 .player-chip .chip-info {
   min-width: 0;

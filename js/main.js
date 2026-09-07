@@ -29,6 +29,7 @@ function bindStartScreen() {
 
   document.getElementById("btn-new-game").addEventListener("click", () => {
     if (window.unlockAudio) window.unlockAudio();
+    if (window.resetSetupAssignments) resetSetupAssignments();
     selectedPlayerCount = 2;
     document.querySelectorAll(".count-chip").forEach((chip) => {
       chip.classList.toggle("active", Number(chip.dataset.count) === selectedPlayerCount);
@@ -54,7 +55,7 @@ function bindStartScreen() {
     saved.isMoving = false; // 이동 도중 저장된 경우 대비 (안 그러면 주사위가 안 눌림)
     saved.status = saved.status === "ended" ? "playing" : saved.status;
     window.gameState = saved;
-    buildBoardDOMOnce();
+    buildBoardDOMOnce(window.gameState);
     renderGameScreen(window.gameState);
     showScreen("screen-game");
     startAILoop();
@@ -124,7 +125,7 @@ function bindSetupScreen() {
       startMoney: selectedStartMoney,
       maxTurns: selectedMaxTurns,
     });
-    buildBoardDOMOnce();
+    buildBoardDOMOnce(window.gameState);
     renderGameScreen(window.gameState);
     saveGame(window.gameState);
     showScreen("screen-game");
@@ -241,22 +242,23 @@ function animateMove(steps) {
 
   if (window.prefersReducedAnim && window.prefersReducedAnim()) {
     player.position = (player.position + steps) % boardLength;
-    renderBoardDynamic(gs);
-    setTimeout(() => handleArrival(), 150);
+    renderBoardDynamic(gs, { landed: true });
+    setTimeout(() => handleArrival(), 200);
     return;
   }
 
   let remaining = steps;
   const stepInterval = setInterval(() => {
     player.position = (player.position + 1) % boardLength;
-    renderBoardDynamic(gs);
-    if (window.playSound) window.playSound("move");
     remaining--;
-    if (remaining <= 0) {
+    const last = remaining <= 0;
+    renderBoardDynamic(gs, { hopPlayerId: player.id, landed: last });
+    if (window.playSound) window.playSound(last ? "land" : "move");
+    if (last) {
       clearInterval(stepInterval);
-      setTimeout(() => handleArrival(), 150);
+      setTimeout(() => handleArrival(), 380);
     }
-  }, 260);
+  }, 300);
 }
 
 /* ---------------------------------------------------------
@@ -321,9 +323,9 @@ function handleArrival() {
     showModal(`
       <div class="modal-flag">${country.flag}</div>
       <h3 class="modal-title">${country.nameKo}</h3>
-      <p class="modal-message">${owner.character} ${escapeAttr(owner.name)}의 나라예요.</p>
-      <div class="modal-rent-row negative"><span>${player.character} ${escapeAttr(player.name)}</span><span>-💰${result.amount}</span></div>
-      <div class="modal-rent-row positive"><span>${owner.character} ${escapeAttr(owner.name)}</span><span>+💰${result.amount}</span></div>
+      <p class="modal-message">${pcMarkup(owner)} ${escapeAttr(owner.name)}의 나라예요.</p>
+      <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-💰${result.amount}</span></div>
+      <div class="modal-rent-row positive"><span>${pcMarkup(owner)} ${escapeAttr(owner.name)}</span><span>+💰${result.amount}</span></div>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -401,7 +403,7 @@ function handleEventTile() {
     showModal(`
       <div class="modal-flag">${card.emoji}</div>
       <h3 class="modal-title">${card.title}</h3>
-      <div class="modal-rent-row ${sign}"><span>${player.character} ${escapeAttr(player.name)}</span><span>${amountText}</span></div>
+      <div class="modal-rent-row ${sign}"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>${amountText}</span></div>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -496,7 +498,7 @@ function handleQuizAnswer(choiceIndex) {
       <div class="modal-flag">🎉</div>
       <h3 class="modal-title">정답이에요!</h3>
       <p class="modal-message">정답은 <b>${quiz.answer}</b>!</p>
-      <div class="modal-rent-row positive"><span>${player.character} ${escapeAttr(player.name)}</span><span>+💰${res.reward}</span></div>
+      <div class="modal-rent-row positive"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>+💰${res.reward}</span></div>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
@@ -671,6 +673,11 @@ function aiResolveModal(gs, player, overlay) {
 function refreshContinueButton() {
   const btn = document.getElementById("btn-continue");
   if (btn) btn.disabled = !hasSavedGame();
+}
+
+/** 모달 안에서 쓰는 작은 말 아이콘 */
+function pcMarkup(player) {
+  return window.pieceMarkup ? pieceMarkup(playerPiece(player), "sm") : "";
 }
 
 function isModalOpen() {

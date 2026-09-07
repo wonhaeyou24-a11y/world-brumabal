@@ -47,6 +47,7 @@ function _tone(freq, startAt, dur, type = "sine", gainPeak = 0.18) {
 const SOUND_PATTERNS = {
   dice:        { notes: [[330, 0, 0.06, "square"], [440, 0.07, 0.06, "square"], [392, 0.14, 0.06, "square"]] },
   move:        { notes: [[523, 0, 0.05, "triangle", 0.12]] },
+  land:        { notes: [[392, 0, 0.08, "triangle", 0.16], [262, 0.06, 0.12, "triangle", 0.14]] },
   buy:         { notes: [[523, 0, 0.09], [659, 0.09, 0.09], [784, 0.18, 0.14]] },
   coinGain:    { notes: [[784, 0, 0.07, "triangle"], [1047, 0.08, 0.12, "triangle"]] },
   coinLoss:    { notes: [[392, 0, 0.1, "sawtooth", 0.14], [294, 0.1, 0.16, "sawtooth", 0.14]] },

@@ -3,11 +3,11 @@
  * 플레이어 데이터 모델.
  */
 
-function createPlayer(id, name, character, color, startMoney, isAI = false) {
+function createPlayer(id, name, pieceId, color, startMoney, isAI = false) {
   return {
     id,                    // 플레이어 고유 ID (0, 1, 2, 3)
     name,                  // 플레이어 이름
-    character,             // 캐릭터 이모지
+    pieceId,               // 말 ID (pieces.js) — 화면에는 사진 또는 이모지로 표시
     color,                 // 플레이어 색상 (게임판 표시용)
     money: startMoney,     // 현재 자금
     position: 0,           // 게임판 칸 인덱스 (0 = START)

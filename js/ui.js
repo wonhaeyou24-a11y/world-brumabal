@@ -4,7 +4,6 @@
  * 게임 규칙 계산은 하지 않고, game.js / property.js / dice.js의 결과를 화면에 반영만 한다.
  */
 
-const PLAYER_CHARACTERS = ["👦", "👧", "👨", "👩", "🤖", "🐶"];
 
 /* ---------------------------------------------------------
    화면 전환
@@ -28,52 +27,94 @@ function hideModal() {
 }
 
 /* ---------------------------------------------------------
-   설정 화면 - 플레이어 입력 폼
+   설정 화면 - 플레이어 입력 폼 (말 고르기)
 --------------------------------------------------------- */
+const DEFAULT_NAMES = ["시우", "아빠", "엄마", "친구"];
+let setupPieceAssign = []; // 플레이어별 선택한 말 ID
+let setupAIAssign = [];    // 플레이어별 AI 여부
+
 function renderSetupForm(count) {
   const wrap = document.getElementById("player-form-list");
+  const pieces = window.PIECES || [];
+
+  // 말 배정 초기화/유지 (기본: 말1=시우 … 순서대로, 중복 없이)
+  if (setupPieceAssign.length !== count) {
+    setupPieceAssign = Array.from({ length: count }, (_, i) => (pieces[i % pieces.length] || {}).id);
+  }
+  if (setupAIAssign.length !== count) {
+    setupAIAssign = Array.from({ length: count }, () => false);
+  }
+
   wrap.innerHTML = "";
   for (let i = 0; i < count; i++) {
     const row = document.createElement("div");
     row.className = "player-form-row";
+    row.dataset.index = i;
     row.innerHTML = `
-      <span class="player-color-dot" style="background:${PLAYER_COLORS_PREVIEW[i % 4]}"></span>
-      <select data-role="character" data-index="${i}">
-        ${PLAYER_CHARACTERS.map((c) => `<option value="${c}">${c}</option>`).join("")}
-      </select>
-      <input data-role="name" data-index="${i}" type="text" maxlength="8" placeholder="플레이어 ${i + 1} 이름" value="${DEFAULT_NAMES[i] || "플레이어 " + (i + 1)}" />
-      <button type="button" class="ai-toggle" data-role="ai" data-index="${i}" aria-pressed="false" title="AI가 대신 플레이">🤖</button>
+      <div class="pf-head">
+        <input data-role="name" data-index="${i}" type="text" maxlength="8"
+               placeholder="플레이어 ${i + 1}" value="${escapeHtml(
+                 setupAIAssign[i] ? `AI ${i + 1}` : DEFAULT_NAMES[i] || "플레이어 " + (i + 1)
+               )}" />
+        <button type="button" class="ai-toggle ${setupAIAssign[i] ? "is-on" : ""}" data-role="ai" data-index="${i}"
+                aria-pressed="${setupAIAssign[i] ? "true" : "false"}" title="AI가 대신 플레이">
+          <span class="ai-toggle-face">🤖</span><span class="ai-toggle-text">AI</span>
+        </button>
+      </div>
+      <div class="piece-pick" data-index="${i}">
+        ${pieces
+          .map(
+            (pc) => `
+          <button type="button" class="piece-opt ${setupPieceAssign[i] === pc.id ? "is-selected" : ""}"
+                  data-piece="${pc.id}" data-index="${i}" style="--piece-color:${pc.color}">
+            ${pieceMarkup(pc, "md")}
+            <span class="piece-opt-label">${pc.label}</span>
+          </button>`
+          )
+          .join("")}
+      </div>
     `;
     wrap.appendChild(row);
   }
 
-  wrap.querySelectorAll('.ai-toggle').forEach((btn) => {
+  wrap.querySelectorAll(".piece-opt").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const on = btn.getAttribute("aria-pressed") !== "true";
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-      btn.classList.toggle("is-on", on);
-      const row = btn.closest(".player-form-row");
-      row.querySelector('input[data-role="name"]').value = on
-        ? `AI ${Number(btn.dataset.index) + 1}`
-        : DEFAULT_NAMES[btn.dataset.index] || `플레이어 ${Number(btn.dataset.index) + 1}`;
+      const i = Number(btn.dataset.index);
+      const pieceId = btn.dataset.piece;
+      if (setupPieceAssign[i] === pieceId) return;
+      // 다른 플레이어가 그 말을 쓰고 있으면 서로 맞바꾼다 (중복 방지)
+      const j = setupPieceAssign.indexOf(pieceId);
+      if (j !== -1) setupPieceAssign[j] = setupPieceAssign[i];
+      setupPieceAssign[i] = pieceId;
+      renderSetupForm(count); // 다시 그려 선택 상태 반영
     });
   });
-  // 캐릭터 기본값을 서로 다르게
-  wrap.querySelectorAll('select[data-role="character"]').forEach((sel, idx) => {
-    sel.value = PLAYER_CHARACTERS[idx % PLAYER_CHARACTERS.length];
+
+  wrap.querySelectorAll(".ai-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const i = Number(btn.dataset.index);
+      const on = btn.getAttribute("aria-pressed") !== "true";
+      setupAIAssign[i] = on;
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.classList.toggle("is-on", on);
+      const input = btn.closest(".player-form-row").querySelector('input[data-role="name"]');
+      input.value = on ? `AI ${i + 1}` : DEFAULT_NAMES[i] || `플레이어 ${i + 1}`;
+    });
   });
 }
 
-const PLAYER_COLORS_PREVIEW = ["#FF7A59", "#3DBBFF", "#4CC97C", "#FFC94D"];
-const DEFAULT_NAMES = ["시우", "아빠", "엄마", "친구"];
+function resetSetupAssignments() {
+  setupPieceAssign = [];
+  setupAIAssign = [];
+}
 
 function readSetupPlayerConfigs() {
   const names = Array.from(document.querySelectorAll('input[data-role="name"]'));
-  const chars = Array.from(document.querySelectorAll('select[data-role="character"]'));
   const ais = Array.from(document.querySelectorAll('.ai-toggle[data-role="ai"]'));
+  const pieces = window.PIECES || [];
   return names.map((input, i) => ({
     name: input.value.trim() || `플레이어 ${i + 1}`,
-    character: chars[i].value,
+    pieceId: setupPieceAssign[i] || (pieces[i % pieces.length] || {}).id,
     isAI: ais[i] ? ais[i].getAttribute("aria-pressed") === "true" : false,
   }));
 }
@@ -84,8 +125,10 @@ function readSetupPlayerConfigs() {
 let currentBoardTiles = [];
 let currentBoardSide = 0;
 
-function buildBoardDOMOnce() {
-  const { tiles, side } = buildBoardTiles();
+function buildBoardDOMOnce(gameState) {
+  const { tiles, side } = buildBoardTiles({
+    countryIds: gameState && gameState.boardCountryIds,
+  });
   currentBoardTiles = tiles;
   currentBoardSide = side;
 
@@ -125,7 +168,6 @@ function buildBoardDOMOnce() {
       tileEl.innerHTML = `
         <div class="tile-flag">${c.flag}</div>
         <div class="tile-name">${c.nameKo}</div>
-        <div class="tile-capital">${c.capitalKo}</div>
         <div class="tile-price">💰${c.price}</div>
         <div class="tile-owner-bar" data-owner-bar></div>
       `;
@@ -140,8 +182,12 @@ function buildBoardDOMOnce() {
   });
 }
 
-/** 소유권 표시, 플레이어 말 위치, 현재 턴 강조 등 동적인 부분만 갱신 */
-function renderBoardDynamic(gameState) {
+/**
+ * 소유권 표시, 플레이어 말 위치, 현재 턴 강조 등 동적인 부분만 갱신.
+ * opts.hopPlayerId : 이 플레이어의 말에 "깡총" 애니메이션을 준다 (이동 중 한 칸씩)
+ * opts.landed      : true면 도착 칸을 "쿵" 강조한다
+ */
+function renderBoardDynamic(gameState, opts = {}) {
   // 소유권 색 표시
   currentBoardTiles.forEach((tile) => {
     if (tile.type !== "country") return;
@@ -150,13 +196,18 @@ function renderBoardDynamic(gameState) {
     const ownerId = getCountryOwnerId(gameState, tile.countryId);
     if (ownerId === null) {
       bar.innerHTML = "";
+      tileEl.style.removeProperty("--owner-color");
+      tileEl.classList.remove("tile--owned");
     } else {
       const owner = gameState.players.find((p) => p.id === ownerId);
-      bar.innerHTML = `<span class="tile-owner-dot" style="background:${owner.color}"></span>`;
+      bar.innerHTML = pieceMarkup(playerPiece(owner), "xs");
+      tileEl.style.setProperty("--owner-color", owner.color);
+      tileEl.classList.add("tile--owned");
     }
   });
 
   // 말 위치 표시
+  const current = getCurrentPlayer(gameState);
   document.querySelectorAll("[data-tokens]").forEach((el) => (el.innerHTML = ""));
   gameState.players.forEach((p) => {
     const tile = currentBoardTiles[p.position % currentBoardTiles.length];
@@ -164,17 +215,26 @@ function renderBoardDynamic(gameState) {
     if (!tileEl) return;
     const tokenWrap = tileEl.querySelector("[data-tokens]");
     const span = document.createElement("span");
-    span.className = "tile-token";
-    span.textContent = p.character;
+    span.className = "tile-token" + (p.id === current.id ? " is-current" : "");
+    span.style.setProperty("--tok-color", p.color);
+    span.dataset.playerId = p.id;
+    span.innerHTML = pieceMarkup(playerPiece(p), "sm");
+    if (p.id === opts.hopPlayerId) span.classList.add("tile-token--hop");
     tokenWrap.appendChild(span);
   });
 
   // 현재 플레이어가 서 있는 칸 강조
   document.querySelectorAll(".tile--current-player").forEach((el) => el.classList.remove("tile--current-player"));
-  const current = getCurrentPlayer(gameState);
   const curTile = currentBoardTiles[current.position % currentBoardTiles.length];
   const curTileEl = document.querySelector(`.tile[data-index="${curTile.index}"]`);
-  if (curTileEl) curTileEl.classList.add("tile--current-player");
+  if (curTileEl) {
+    curTileEl.classList.add("tile--current-player");
+    if (opts.landed) {
+      curTileEl.classList.remove("tile--landing");
+      void curTileEl.offsetWidth; // 리플로우 강제 → 애니메이션 재시작
+      curTileEl.classList.add("tile--landing");
+    }
+  }
 
   const centerTurnText = document.getElementById("center-turn-text");
   if (centerTurnText) centerTurnText.textContent = `${gameState.turn} / ${gameState.maxTurns}턴`;
@@ -189,10 +249,10 @@ function renderPlayerPanel(gameState) {
     .map((p, i) => {
       const isCurrent = i === gameState.currentPlayerIndex;
       return `
-        <div class="player-chip ${isCurrent ? "is-current" : ""}" data-player-id="${p.id}" style="border-color:${isCurrent ? p.color : "transparent"}">
-          <span class="chip-face">${p.character}</span>
+        <div class="player-chip ${isCurrent ? "is-current" : ""}" data-player-id="${p.id}" style="--chip-color:${p.color};border-color:${isCurrent ? p.color : "transparent"}">
+          <span class="chip-face">${pieceMarkup(playerPiece(p), "md")}</span>
           <div class="chip-info">
-            <div class="chip-name">${escapeHtml(p.name)}</div>
+            <div class="chip-name">${escapeHtml(p.name)}${p.isAI ? " 🤖" : ""}</div>
             <div class="chip-money">💰${p.money}</div>
           </div>
         </div>
@@ -216,7 +276,8 @@ function flashMoney(playerId, delta) {
 function renderTopbar(gameState) {
   const current = getCurrentPlayer(gameState);
   const tag = current.isAI ? " 🤖" : "";
-  document.getElementById("turn-indicator").textContent = `${current.character} ${current.name}의 차례!${tag}`;
+  document.getElementById("turn-indicator").innerHTML =
+    `${pieceMarkup(playerPiece(current), "md")}<span class="turn-name">${escapeHtml(current.name)}의 차례!${tag}</span>`;
   document.getElementById("turn-counter").textContent = `${gameState.turn} / ${gameState.maxTurns}턴`;
 }
 
@@ -247,9 +308,9 @@ function renderResultScreen(gameState) {
   list.innerHTML = results
     .map(
       (r, i) => `
-      <div class="result-row">
+      <div class="result-row ${i === 0 ? "is-winner" : ""}">
         <div class="result-rank">${medal[i] || i + 1}</div>
-        <span style="font-size:1.4rem">${r.player.character}</span>
+        <span class="result-piece">${pieceMarkup(playerPiece(r.player), "lg")}</span>
         <div style="flex:1">
           <div class="result-name">${escapeHtml(r.player.name)}</div>
           <div class="result-detail">보유 국가 ${r.countryCount}개 · 현금 💰${r.cash}</div>
@@ -337,6 +398,7 @@ window.showModal = showModal;
 window.hideModal = hideModal;
 window.renderSetupForm = renderSetupForm;
 window.readSetupPlayerConfigs = readSetupPlayerConfigs;
+window.resetSetupAssignments = resetSetupAssignments;
 window.buildBoardDOMOnce = buildBoardDOMOnce;
 window.renderBoardDynamic = renderBoardDynamic;
 window.renderGameScreen = renderGameScreen;

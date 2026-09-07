@@ -15,11 +15,14 @@ function createInitialGameState(playerConfigs, settings = {}) {
   const startMoney = settings.startMoney ?? DEFAULT_START_MONEY;
   const maxTurns = settings.maxTurns ?? DEFAULT_MAX_TURNS;
 
-  const players = playerConfigs.map((cfg, i) =>
-    createPlayer(i, cfg.name, cfg.character, PLAYER_COLORS[i % PLAYER_COLORS.length], startMoney, cfg.isAI)
-  );
+  const players = playerConfigs.map((cfg, i) => {
+    const piece = window.getPieceById ? window.getPieceById(cfg.pieceId) : null;
+    const color = (piece && piece.color) || PLAYER_COLORS[i % PLAYER_COLORS.length];
+    return createPlayer(i, cfg.name, cfg.pieceId, color, startMoney, cfg.isAI);
+  });
 
-  const { tiles } = buildBoardTiles();
+  const boardCountryIds = pickBoardCountryIds();
+  const { tiles } = buildBoardTiles({ countryIds: boardCountryIds });
 
   return {
     status: "playing",       // "playing" | "ended"
@@ -28,6 +31,7 @@ function createInitialGameState(playerConfigs, settings = {}) {
     turn: 1,
     maxTurns,
     boardLength: tiles.length,
+    boardCountryIds,          // 이번 판 게임판에 올린 국가 (이어하기 시 동일 배치 재현)
     countryOwners: {},        // countryId -> playerId
     visitedCountries: {},     // playerId -> [countryId, ...]
     settings: { startMoney, maxTurns },

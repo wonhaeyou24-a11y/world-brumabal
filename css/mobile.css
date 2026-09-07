@@ -1,6 +1,6 @@
 /* ==========================================================
    mobile.css
-   반응형 보정 (스마트폰 세로/가로, 태블릿, PC)
+   작은 화면(스마트폰) 보정. 태블릿/가로 레이아웃은 tablet.css 담당.
    ========================================================== */
 
 /* 아주 작은 화면: 여백 축소 */
@@ -9,78 +9,44 @@
     padding: 16px 10px 24px;
   }
   .dice-btn {
-    width: 78px;
-    height: 78px;
-    font-size: 2.3rem;
+    width: 82px;
+    height: 82px;
+    font-size: 2.4rem;
   }
 }
 
-/* 스마트폰 가로 모드: 게임판을 줄이고 좌우 배치 느낌으로 여백 최소화 */
-@media (max-height: 480px) and (orientation: landscape) {
+/* 스마트폰 가로 모드: 게임판과 정보를 좌우로 */
+@media (max-height: 560px) and (orientation: landscape) and (max-width: 879px) {
   #screen-game {
     flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
+    gap: 10px;
+    height: 100vh;
+    height: 100dvh;
+    padding: 8px 12px;
+  }
+  #board-wrapper {
+    height: 100%;
+    width: auto;
+    max-width: 94vh;
+    margin: 0;
+  }
+  #game-side {
+    flex: 1;
+    min-width: 150px;
+    max-width: 320px;
+    justify-content: center;
     gap: 8px;
   }
-  .game-topbar {
-    width: 100%;
-  }
-  #board-wrapper {
-    max-width: 380px;
-  }
-  .player-panel {
-    flex: 1;
-    min-width: 140px;
-    grid-template-columns: 1fr;
-  }
-  .dice-area {
-    flex: 0 0 100px;
-  }
-}
-
-/* 태블릿 이상: 게임판을 더 크게 */
-@media (min-width: 700px) {
-  #board-wrapper {
-    max-width: 720px;
-  }
-  .tile-name {
-    font-size: 0.78rem;
-  }
-  .tile-capital {
-    font-size: 0.65rem;
-  }
-}
-
-/* PC: 전체 폭을 넓게 사용 */
-@media (min-width: 1000px) {
-  #screen-game {
-    max-width: 960px;
-    display: grid;
-    grid-template-columns: 1fr 260px;
-    grid-template-areas:
-      "topbar topbar"
-      "board  players"
-      "board  dice";
-    align-items: start;
-  }
-  .game-topbar { grid-area: topbar; }
-  #board-wrapper { grid-area: board; max-width: 720px; }
-  .player-panel { grid-area: players; grid-template-columns: 1fr; }
-  .dice-area { grid-area: dice; }
+  .player-panel { grid-template-columns: 1fr; }
+  .dice-btn { width: 84px; height: 84px; font-size: 2.6rem; }
 }
 
 /* 모션 최소화 선호 사용자 배려 */
 @media (prefers-reduced-motion: reduce) {
-  .dice-btn.dice--rolling {
-    animation: none;
-  }
-  .modal-content {
-    animation: none;
-  }
-  .tile-token {
-    transition: none;
-  }
+  .dice-btn.dice--rolling { animation: none; }
+  .modal-content { animation: none; }
+  .tile-token { transition: none; }
 }
 
 /* 사용자가 설정에서 애니메이션을 끈 경우 */

@@ -3,11 +3,37 @@
  * 게임판 레이아웃(칸 배치)을 생성한다.
  * 국가를 추가/삭제해도(20개→50개→100개) 이 파일을 수정할 필요가 없다.
  * 정사각형 둘레의 네 모서리는 START + 쉼터 3칸으로 고정하고,
- * 나머지 둘레 칸에 countries.js의 국가를 순서대로 채우되,
- * 국가 몇 개마다 이벤트 칸(EVENT_EVERY)을 하나씩 끼워 넣는다.
+ * 나머지 둘레 칸에 국가를 순서대로 채우되, 국가 몇 개마다 찬스 칸을 하나씩 끼워 넣는다.
+ *
+ * 데이터에 국가가 BOARD_COUNTRY_TARGET보다 많으면 매 판 무작위로 골라 게임판에 올린다
+ * (칸이 커지고, 판마다 여행지가 달라져 재미가 있다). 여행 도감에는 전체 국가가 다 나온다.
  */
 
-const EVENT_EVERY = 4; // 국가 N개마다 이벤트 칸 1개
+const EVENT_EVERY = 8;             // 국가 N개마다 이벤트(찬스) 칸 1개
+const BOARD_COUNTRY_TARGET = 36;   // 한 판에 게임판에 올릴 국가 수
+
+const CONTINENT_ORDER = ["아시아", "유럽", "북아메리카", "남아메리카", "아프리카", "오세아니아"];
+
+function _shuffled(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** 이번 판에 게임판에 올릴 국가 ID 목록을 고른다 (대륙 순서로 정렬해 반환) */
+function pickBoardCountryIds(target = BOARD_COUNTRY_TARGET) {
+  const all = getAllCountries();
+  const chosen = all.length <= target ? [...all] : _shuffled(all).slice(0, target);
+  chosen.sort(
+    (a, b) =>
+      CONTINENT_ORDER.indexOf(a.continent) - CONTINENT_ORDER.indexOf(b.continent) ||
+      a.nameKo.localeCompare(b.nameKo, "ko")
+  );
+  return chosen.map((c) => c.id);
+}
 
 /** side x side 정사각형의 둘레 좌표를 시계 방향으로 반환 (좌상단이 시작점) */
 function getPerimeterCoords(side) {
@@ -19,15 +45,12 @@ function getPerimeterCoords(side) {
   return coords;
 }
 
-/**
- * 국가 + 이벤트 칸이 섞인 "채울 순서" 목록을 만든다.
- * 반환: [{ kind: "country", countryId } | { kind: "event" }, ...]
- */
-function buildFillSequence(countries, eventEvery) {
+/** 국가 + 찬스 칸이 섞인 "채울 순서" 목록 */
+function buildFillSequence(countryIds, eventEvery) {
   const seq = [];
-  countries.forEach((country, i) => {
-    seq.push({ kind: "country", countryId: country.id });
-    const isLast = i === countries.length - 1;
+  countryIds.forEach((id, i) => {
+    seq.push({ kind: "country", countryId: id });
+    const isLast = i === countryIds.length - 1;
     if (!isLast && eventEvery > 0 && (i + 1) % eventEvery === 0) {
       seq.push({ kind: "event" });
     }
@@ -37,17 +60,16 @@ function buildFillSequence(countries, eventEvery) {
 
 /**
  * 게임판 칸 목록을 생성한다.
- * 반환 배열의 각 원소: { index, type, row, col, countryId? }
- * type: "start" | "rest" | "country" | "event"
+ * options.countryIds : 이번 판에 쓸 국가 ID 배열 (생략 시 매판 새로 고름 — 주의: 호출마다 달라짐)
+ * 반환: { tiles, side }
+ * tiles 각 원소: { index, type: "start"|"rest"|"country"|"event", row, col, countryId? }
  */
 function buildBoardTiles(options = {}) {
   const eventEvery = options.eventEvery ?? EVENT_EVERY;
-  const countries = getAllCountries();
-  const fillSeq = buildFillSequence(countries, eventEvery);
+  const countryIds = options.countryIds || pickBoardCountryIds();
+  const fillSeq = buildFillSequence(countryIds, eventEvery);
 
-  // 둘레 칸 수 = 4*(side-1). 그 중 4칸은 모서리(출발+쉼터3)이므로
-  // 채울 수 있는 칸 수(non-corner) = 4*(side-1)-4 = 4*side-8.
-  // 이 값이 fillSeq 길이 이상이 되는 최소 side를 구한다.
+  // 둘레 칸 수 = 4*(side-1). 그 중 4칸은 모서리. non-corner = 4*side-8.
   const side = Math.max(4, Math.ceil((fillSeq.length + 8) / 4));
   const coords = getPerimeterCoords(side);
   const total = coords.length;
@@ -70,7 +92,6 @@ function buildBoardTiles(options = {}) {
         tiles.push({ index: i, type: "event", row, col });
       }
     } else {
-      // 남는 둘레 칸은 쉼터로 채운다 (국가 수가 적을 때 자동 대응)
       tiles.push({ index: i, type: "rest", row, col });
     }
   }
@@ -78,4 +99,5 @@ function buildBoardTiles(options = {}) {
   return { tiles, side };
 }
 
+window.pickBoardCountryIds = pickBoardCountryIds;
 window.buildBoardTiles = buildBoardTiles;
