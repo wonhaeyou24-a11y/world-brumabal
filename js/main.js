@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 --------------------------------------------------------- */
 function bindStartScreen() {
   const continueBtn = document.getElementById("btn-continue");
-  continueBtn.disabled = !hasSavedGame();
+  refreshContinueButton();
 
   document.getElementById("btn-new-game").addEventListener("click", () => {
     if (window.unlockAudio) window.unlockAudio();
@@ -40,7 +40,19 @@ function bindStartScreen() {
   continueBtn.addEventListener("click", () => {
     if (window.unlockAudio) window.unlockAudio();
     const saved = loadGame();
-    if (!saved) return;
+    if (!saved || !Array.isArray(saved.players) || saved.players.length < 2) {
+      // 저장 데이터 손상 — 정리하고 버튼 비활성
+      clearSavedGame();
+      refreshContinueButton();
+      showModal(`
+        <h3 class="modal-title">이어할 게임이 없어요</h3>
+        <p class="modal-message">저장된 게임을 불러오지 못했어요. 새 게임을 시작해 주세요.</p>
+        <div class="modal-actions"><button class="btn btn-primary btn-block" data-action="close-modal">확인</button></div>
+      `);
+      return;
+    }
+    saved.isMoving = false; // 이동 도중 저장된 경우 대비 (안 그러면 주사위가 안 눌림)
+    saved.status = saved.status === "ended" ? "playing" : saved.status;
     window.gameState = saved;
     buildBoardDOMOnce();
     renderGameScreen(window.gameState);
@@ -128,9 +140,16 @@ function bindGameScreen() {
 
   document.getElementById("btn-open-collection").addEventListener("click", () => {
     if (!window.gameState) return;
+    if (isModalOpen()) return; // 모달 처리 중에는 화면 이동 금지
     collectionReturnScreen = "screen-game";
     renderCollectionScreen(window.gameState);
     showScreen("screen-collection");
+  });
+
+  document.getElementById("btn-open-settings-game").addEventListener("click", () => {
+    if (isModalOpen()) return;
+    if (window.unlockAudio) window.unlockAudio();
+    showSettingsModal();
   });
 
   // 모달 안의 버튼은 동적으로 생성되므로 이벤트 위임으로 처리
@@ -160,6 +179,9 @@ function bindGameScreen() {
     } else if (action === "toggle-anim") {
       saveSettings({ animOn: !loadSettings().animOn });
       showSettingsModal();
+    } else if (action === "toggle-hardquiz") {
+      saveSettings({ hardQuiz: !loadSettings().hardQuiz });
+      showSettingsModal();
     }
   });
 }
@@ -179,6 +201,7 @@ function showSettingsModal() {
     <div class="setting-list">
       ${row("🔊 소리", s.soundOn, "toggle-sound")}
       ${row("✨ 애니메이션", s.animOn, "toggle-anim")}
+      ${row("🧠 어려운 퀴즈 (보기 4개)", s.hardQuiz, "toggle-hardquiz")}
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary btn-block" data-action="close-modal">확인</button>
@@ -564,7 +587,7 @@ function bindResultScreen() {
   document.getElementById("btn-play-again").addEventListener("click", () => {
     window.gameState = null;
     showScreen("screen-start");
-    document.getElementById("btn-continue").disabled = true;
+    refreshContinueButton();
   });
 }
 
@@ -610,6 +633,9 @@ function aiClick(el) {
 function aiResolveModal(gs, player, overlay) {
   const has = (action) => overlay.querySelector(`[data-action="${action}"]`);
 
+  // 설정 모달은 사용자가 연 것 — AI가 건드리지 않는다
+  if (has("toggle-sound") || has("toggle-anim")) return;
+
   // 1) 퀴즈 보기가 있으면 답을 고른다
   if (has("quiz-answer") && pendingQuiz) {
     const idx = aiQuizChoiceIndex(pendingQuiz.quiz);
@@ -640,6 +666,15 @@ function aiResolveModal(gs, player, overlay) {
 
   // 3) 그 외 진행 버튼은 그냥 누른다
   aiClick(has("confirm-arrival") || has("quiz-result-to-arrival") || has("close-modal"));
+}
+
+function refreshContinueButton() {
+  const btn = document.getElementById("btn-continue");
+  if (btn) btn.disabled = !hasSavedGame();
+}
+
+function isModalOpen() {
+  return !document.getElementById("modal-overlay").classList.contains("hidden");
 }
 
 function escapeAttr(str) {

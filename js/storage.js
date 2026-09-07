@@ -34,7 +34,8 @@ function loadGame() {
 }
 
 function hasSavedGame() {
-  return window.localStorage.getItem(SAVE_KEY) !== null;
+  const saved = loadGame();
+  return !!(saved && Array.isArray(saved.players) && saved.players.length >= 2);
 }
 
 function clearSavedGame() {

@@ -28,7 +28,7 @@ function _pickWrongCountries(country, count) {
 
 /** 특정 국가의 "수도 맞히기" 퀴즈를 만든다 */
 function buildCapitalQuiz(country) {
-  const wrongN = (window.QUIZ_CONFIG?.choiceCount ?? 3) - 1;
+  const wrongN = (window.quizChoiceCount ? window.quizChoiceCount() : (window.QUIZ_CONFIG?.choiceCount ?? 3)) - 1;
   const wrongs = _pickWrongCountries(country, wrongN).map((c) => c.capitalKo);
   return {
     type: "capital",
@@ -41,7 +41,7 @@ function buildCapitalQuiz(country) {
 
 /** 특정 국가의 "이 국기는 어느 나라?" 퀴즈를 만든다 */
 function buildFlagQuiz(country) {
-  const wrongN = (window.QUIZ_CONFIG?.choiceCount ?? 3) - 1;
+  const wrongN = (window.quizChoiceCount ? window.quizChoiceCount() : (window.QUIZ_CONFIG?.choiceCount ?? 3)) - 1;
   const wrongs = _pickWrongCountries(country, wrongN).map((c) => c.nameKo);
   return {
     type: "flag",

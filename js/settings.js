@@ -9,6 +9,7 @@ const SETTINGS_KEY = "worldBrumabal_settings_v1";
 const DEFAULT_SETTINGS = {
   soundOn: true,
   animOn: true,
+  hardQuiz: false, // false=보기 3개(쉬움), true=보기 4개(어려움)
 };
 
 function loadSettings() {
@@ -46,6 +47,11 @@ function isSoundOn() {
   return loadSettings().soundOn;
 }
 
+/** 퀴즈 보기 개수 (쉬움 3 / 어려움 4) */
+function quizChoiceCount() {
+  return loadSettings().hardQuiz ? 4 : (window.QUIZ_CONFIG?.choiceCount ?? 3);
+}
+
 /** body 클래스로 CSS 애니메이션 on/off를 반영 */
 function applySettingsToDocument(settings = loadSettings()) {
   document.body.classList.toggle("no-anim", !settings.animOn);
@@ -55,4 +61,5 @@ window.loadSettings = loadSettings;
 window.saveSettings = saveSettings;
 window.prefersReducedAnim = prefersReducedAnim;
 window.isSoundOn = isSoundOn;
+window.quizChoiceCount = quizChoiceCount;
 window.applySettingsToDocument = applySettingsToDocument;
