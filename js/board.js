@@ -14,6 +14,16 @@ const BOARD_COUNTRY_TARGET = 24;   // 한 판에 게임판에 올릴 국가 수(
 
 const CONTINENT_ORDER = ["아시아", "유럽", "북아메리카", "남아메리카", "아프리카", "오세아니아"];
 
+// 기본(무작위 OFF) 게임판에 올리는 고정 24개국 — 대륙별로 골고루
+const FIXED_BOARD_IDS = [
+  "KR", "JP", "CN", "IN", "TH", "VN", "TR",   // 아시아 7
+  "GB", "FR", "DE", "IT", "ES", "CH", "GR",   // 유럽 7
+  "US", "CA", "MX",                            // 북아메리카 3
+  "BR", "AR", "PE",                            // 남아메리카 3
+  "EG", "KE",                                  // 아프리카 2
+  "AU", "NZ",                                  // 오세아니아 2
+];
+
 function _shuffled(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -26,14 +36,28 @@ function _shuffled(arr) {
 /** 나라칸에 이름이 무난히 들어가는 길이 (한글 5자 이하). 더 길면 기본은 벤치로 */
 const NAME_FITS = (c) => (c.nameKo || "").length <= 5;
 
-/** 이번 판에 게임판에 올릴 국가 ID 목록을 고른다 (대륙 순서로 정렬해 반환) */
+/** 이번 판에 게임판에 올릴 국가 ID 목록을 고른다 (대륙 순서로 정렬해 반환)
+ *  설정에서 '판마다 나라 무작위'가 켜져 있으면 새 게임마다 무작위로,
+ *  꺼져 있으면(기본) 항상 같은 고정 24개국을 올린다.
+ */
 function pickBoardCountryIds(target = BOARD_COUNTRY_TARGET) {
   const all = getAllCountries();
-  // 데이터가 target 이하면 전부 사용(정의 순서 유지), 많으면 무작위로 고름
+  // 데이터가 target 이하면 전부 사용(정의 순서 유지)
   if (all.length <= target) return all.map((c) => c.id);
-  // 이름이 짧아 칸에 잘 들어가는 나라를 먼저, 긴 이름은 뒤로 밀어 기본은 벤치로
-  const pool = _shuffled(all).sort((a, b) => (NAME_FITS(a) ? 0 : 1) - (NAME_FITS(b) ? 0 : 1));
-  const chosen = pool.slice(0, target);
+
+  const random = window.randomizeCountriesEachGame && window.randomizeCountriesEachGame();
+  let chosen;
+  if (random) {
+    // 이름이 짧아 칸에 잘 들어가는 나라를 먼저
+    const pool = _shuffled(all).sort((a, b) => (NAME_FITS(a) ? 0 : 1) - (NAME_FITS(b) ? 0 : 1));
+    chosen = pool.slice(0, target);
+  } else {
+    // 고정 세트 (없는 id는 걸러내고, 모자라면 나머지로 채움)
+    const byId = new Map(all.map((c) => [c.id, c]));
+    const fixed = FIXED_BOARD_IDS.map((id) => byId.get(id)).filter(Boolean);
+    const rest = all.filter((c) => !FIXED_BOARD_IDS.includes(c.id));
+    chosen = [...fixed, ...rest].slice(0, target);
+  }
   chosen.sort(
     (a, b) =>
       CONTINENT_ORDER.indexOf(a.continent) - CONTINENT_ORDER.indexOf(b.continent) ||

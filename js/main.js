@@ -221,6 +221,9 @@ function bindGameScreen() {
     } else if (action === "toggle-hardquiz") {
       saveSettings({ hardQuiz: !loadSettings().hardQuiz });
       showSettingsModal();
+    } else if (action === "toggle-random-countries") {
+      saveSettings({ randomCountries: !loadSettings().randomCountries });
+      showSettingsModal();
     } else if (action === "open-country-swap") {
       showCountrySwapModal();
     } else if (action === "open-settings") {
@@ -266,6 +269,7 @@ function showSettingsModal() {
       ${row("🔊 소리", s.soundOn, "toggle-sound")}
       ${row("✨ 애니메이션", s.animOn, "toggle-anim")}
       ${row("🧠 어려운 퀴즈 (보기 4개)", s.hardQuiz, "toggle-hardquiz")}
+      ${row("🎲 새 게임마다 나라 무작위", s.randomCountries, "toggle-random-countries")}
       ${
         inGame
           ? `<button class="setting-row" data-action="open-country-swap">

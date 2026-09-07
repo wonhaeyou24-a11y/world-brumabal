@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
   soundOn: true,
   animOn: true,
   hardQuiz: false, // false=보기 3개(쉬움), true=보기 4개(어려움)
+  randomCountries: false, // false=매 판 같은 나라(고정), true=새 게임마다 무작위
 };
 
 function loadSettings() {
@@ -52,6 +53,11 @@ function quizChoiceCount() {
   return loadSettings().hardQuiz ? 4 : (window.QUIZ_CONFIG?.choiceCount ?? 3);
 }
 
+/** 새 게임마다 게임판 나라를 무작위로 바꿀지 여부 */
+function randomizeCountriesEachGame() {
+  return !!loadSettings().randomCountries;
+}
+
 /** body 클래스로 CSS 애니메이션 on/off를 반영 */
 function applySettingsToDocument(settings = loadSettings()) {
   document.body.classList.toggle("no-anim", !settings.animOn);
@@ -62,4 +68,5 @@ window.saveSettings = saveSettings;
 window.prefersReducedAnim = prefersReducedAnim;
 window.isSoundOn = isSoundOn;
 window.quizChoiceCount = quizChoiceCount;
+window.randomizeCountriesEachGame = randomizeCountriesEachGame;
 window.applySettingsToDocument = applySettingsToDocument;
