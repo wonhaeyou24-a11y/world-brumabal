@@ -18,23 +18,23 @@
     padding: 8px;
   }
 
-  /* 게임판: 세로 공간을 꽉 채워서 왼쪽에 크게. 사이드바(약 400px)를 뺀 만큼 */
+  /* 게임판: 세로 공간을 꽉 채워서 왼쪽에 크게 */
   #board-wrapper {
     flex: 0 0 auto;
     align-self: center;
-    width: min(100dvh - 16px, 100vw - 420px);
-    height: min(100dvh - 16px, 100vw - 420px);
+    width: min(100dvh - 16px, 100vw - 440px);
+    height: min(100dvh - 16px, 100vw - 440px);
     max-width: 1500px;
     max-height: 1500px;
     aspect-ratio: auto;
     margin: 0;
   }
 
-  /* 사이드바: 남는 오른쪽 공간을 차지하고 세로로 꽉 채운다. 스크롤 없이 한눈에 */
+  /* 사이드바: 남는 오른쪽 공간을 최대한 넓게 차지하고 세로로 꽉 채운다 */
   #game-side {
     flex: 1 1 auto;
-    max-width: clamp(300px, 24vw, 420px);
-    min-width: 288px;
+    max-width: clamp(340px, 34vw, 560px);
+    min-width: 320px;
     margin-left: auto;
     align-self: stretch;
     justify-content: flex-start;
@@ -56,23 +56,24 @@
     align-content: start;
   }
   .player-card { border-width: 3px; }
-  .pc-main { padding: 12px 14px; gap: 14px; }
-  .pc-avatar .piece { width: clamp(3.4rem, 6vh, 5rem); height: clamp(3.4rem, 6vh, 5rem); }
-  .pc-tags { font-size: 0.9rem; gap: 12px; }
-  .pc-money { font-size: clamp(1.2rem, 2.6vh, 1.55rem); }
-  .pc-sub { font-size: 0.85rem; }
-  .pc-avatar-name { font-size: 0.82rem; padding: 3px 10px; }
-  .pc-owned-label { font-size: 0.82rem; padding-inline: 16px; }
-  .owned-folder { padding: 8px 14px 12px; gap: 5px; }
-  .owned-tab { font-size: 0.9rem; padding: 5px 10px 5px 8px; }
+  .pc-main { padding: 14px 18px; gap: 18px; }
+  .pc-avatar .piece { width: clamp(3.8rem, 7vh, 6rem); height: clamp(3.8rem, 7vh, 6rem); }
+  .pc-tags { font-size: 0.98rem; gap: 16px; }
+  .pc-money { font-size: clamp(1.35rem, 3vh, 1.8rem); }
+  .pc-sub { font-size: 0.92rem; }
+  .pc-avatar-name { font-size: 0.88rem; padding: 4px 12px; }
+  .pc-owned-label { font-size: 0.88rem; padding-inline: 18px; }
+  .owned-folder { padding: 10px 16px 14px; gap: 7px; }
+  .owned-tab { font-size: 0.98rem; padding: 7px 12px 7px 9px; }
+  .owned-tab .owned-flag .flag { width: 1.6rem; }
 }
 
 /* 아주 넓은 화면(24인치+): 판을 더 키우고 카드도 큼직하게 */
 @media (min-width: 1600px) {
-  #board-wrapper { width: min(100dvh - 16px, 100vw - 520px); height: min(100dvh - 16px, 100vw - 520px); }
-  #game-side { max-width: 480px; }
-  .pc-money { font-size: 1.7rem; }
-  .pc-avatar .piece { width: 5.6rem; height: 5.6rem; }
+  #board-wrapper { width: min(100dvh - 16px, 100vw - 640px); height: min(100dvh - 16px, 100vw - 640px); }
+  #game-side { max-width: 620px; }
+  .pc-money { font-size: 1.95rem; }
+  .pc-avatar .piece { width: 6.4rem; height: 6.4rem; }
 }
 
 /* ---------- 세로 태블릿 ---------- */

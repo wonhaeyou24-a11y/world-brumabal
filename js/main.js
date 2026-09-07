@@ -188,7 +188,26 @@ function bindGameScreen() {
       }
       return;
     }
+    if (btn.disabled) return;
     const action = btn.dataset.action;
+
+    // 진행(턴을 바꾸거나 상태를 넘기는) 버튼은 한 번만 — 연타/AI 중복클릭으로 턴이 건너뛰는 것 방지
+    const ONE_SHOT = [
+      "buy-country", "skip-buy", "confirm-arrival", "quiz-answer",
+      "quiz-result-to-arrival", "try-purchase-quiz", "exit-to-start",
+    ];
+    if (ONE_SHOT.includes(action)) {
+      const content = btn.closest("#modal-content");
+      if (content) {
+        content.querySelectorAll("[data-action]").forEach((b) => {
+          if (ONE_SHOT.includes(b.dataset.action)) b.disabled = true;
+        });
+      }
+    }
+
+    if (["confirm-arrival", "skip-buy", "close-modal", "quiz-result-to-arrival"].includes(action)) {
+      if (window.playSound) window.playSound("select");
+    }
 
     if (action === "close-modal") {
       hideModal();
@@ -302,9 +321,16 @@ let pendingEventCard = null;
 
 /** 일정 시간 뒤, "다음으로" 모달이 그대로 떠 있으면 자동으로 다음 차례로 넘긴다 */
 let autoAdvanceTimer = null;
+function turnSnapshot() {
+  const gs = window.gameState;
+  return gs ? gs.turn + ":" + gs.currentPlayerIndex : "";
+}
 function autoAdvance(ms) {
   clearTimeout(autoAdvanceTimer);
+  const snap = turnSnapshot();
   autoAdvanceTimer = setTimeout(() => {
+    // 그 사이에 이미 턴이 넘어갔으면(직접 눌렀거나) 아무것도 하지 않는다
+    if (turnSnapshot() !== snap) return;
     const confirmBtn = document.querySelector('#modal-overlay [data-action="confirm-arrival"]');
     if (isModalOpen() && confirmBtn && window.gameState && window.gameState.status === "playing") {
       finishTurn();
@@ -383,7 +409,7 @@ function animateMove(steps) {
     remaining--;
     const last = remaining <= 0;
     renderBoardDynamic(gs, { hopPlayerId: player.id, landed: last });
-    if (window.playSound) window.playSound(last ? "land" : "move");
+    if (window.playSound) window.playSound(last ? "land" : "step");
     if (last) {
       clearInterval(stepInterval);
       grantPassStartBonus(gs, player, oldPos, steps);
@@ -414,19 +440,30 @@ function handleArrival() {
   }
 
   if (tile.type === "rest") {
-    showModal(`
+    if (window.playSound) window.playSound("restStop");
+    const restHTML = `
       <div class="modal-flag">🍔</div>
       <h3 class="modal-title">쉼터</h3>
       <p class="modal-message">햄버거랑 음료 한 잔 하고<br>잠시 쉬어가요 😋</p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
-    `);
+    `;
+    if (window.showFxBurst) {
+      showFxBurst("pop", { emoji: "🍔", text: "쉼터!", onDone: () => showModal(restHTML) });
+    } else {
+      showModal(restHTML);
+    }
     return;
   }
 
   if (tile.type === "event") {
-    handleEventTile();
+    if (window.playSound) window.playSound("keyReveal");
+    if (window.showFxBurst) {
+      showFxBurst("pop", { emoji: "🗝️", text: "황금열쇠!", onDone: () => handleEventTile() });
+    } else {
+      handleEventTile();
+    }
     return;
   }
 
@@ -486,6 +523,7 @@ function handleArrival() {
 /** 무소유 국가 도착 카드 (구입/퀴즈/지나가기) */
 function showArrivalCard() {
   const gs = window.gameState;
+  if (!pendingArrival) return; // 이미 처리됨
   const player = getCurrentPlayer(gs);
   const country = getCountryById(pendingArrival.countryId);
   const price = getEffectivePrice(country, pendingArrival.discountRate);
@@ -603,6 +641,11 @@ function handleEventTile() {
 function handleQuizAnswer(choiceIndex) {
   if (!pendingQuiz) return;
   const { quiz, context } = pendingQuiz;
+  pendingQuiz = null; // 소비 — 중복 클릭 방지
+  if (context === "purchase" && !pendingArrival) {
+    finishTurn();
+    return;
+  }
   const choice = quiz.choices[choiceIndex];
   const correct = isCorrectAnswer(quiz, choice);
   const gs = window.gameState;
@@ -663,14 +706,21 @@ function handleQuizAnswer(choiceIndex) {
 --------------------------------------------------------- */
 function handleBuyDecision(wantsToBuy) {
   const gs = window.gameState;
+  if (!gs || gs.status !== "playing") return;
+
+  // pendingArrival을 먼저 소비 — 중복 호출(연타·AI 재클릭) 시 두 번째부터는 그냥 무시
+  const arrival = pendingArrival;
+  pendingArrival = null;
+  if (!arrival) return;
+
   const player = getCurrentPlayer(gs);
 
-  if (wantsToBuy && pendingArrival) {
-    const { countryId, discountRate } = pendingArrival;
+  if (wantsToBuy) {
+    const { countryId, discountRate } = arrival;
     const success = buyCountry(gs, player, countryId, discountRate);
     const country = getCountryById(countryId);
-    pendingArrival = null;
     if (success) {
+      hideModal(); // 연출(FX) 동안 도착 카드가 남아 다시 눌리는 것 방지
       renderBoardDynamic(gs);
       renderPlayerPanel(gs);
       saveGame(gs);
@@ -694,7 +744,6 @@ function handleBuyDecision(wantsToBuy) {
       return;
     }
   }
-  pendingArrival = null;
   finishTurn();
 }
 
@@ -704,6 +753,10 @@ function handleBuyDecision(wantsToBuy) {
 function finishTurn() {
   const gs = window.gameState;
   clearTimeout(autoAdvanceTimer);
+  if (!gs || gs.status !== "playing") {
+    hideModal();
+    return;
+  }
   hideModal();
   pendingArrival = null;
   pendingQuiz = null;

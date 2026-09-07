@@ -466,6 +466,22 @@ function showFxBurst(kind, opts = {}) {
   layer.className = "fx-layer fx-" + kind;
   const text = escapeHtml(opts.text || (kind === "buy" ? "구입!" : "통행료!"));
 
+  if (kind === "pop") {
+    // 쉼터 햄버거 / 황금열쇠 — 큰 이모지가 입체적으로 뿅! 튀어나온다
+    const emoji = opts.emoji || "🍔";
+    const spark = Array.from({ length: 10 }, (_, i) => {
+      return `<i style="--a:${i * 36}deg;--d:${(Math.random() * 0.12).toFixed(2)}s"></i>`;
+    }).join("");
+    layer.innerHTML =
+      `<div class="fx-pop-burst"></div>` +
+      `<div class="fx-pop-emoji">${emoji}</div>` +
+      (text ? `<div class="fx-text">${text}</div>` : "") +
+      `<div class="fx-pop-spark">${spark}</div>`;
+    layer.classList.remove("hidden");
+    setTimeout(done, reduced ? 200 : 900);
+    return;
+  }
+
   if (kind === "buy") {
     const confetti = Array.from({ length: 18 }, (_, i) => {
       const colors = ["#FF7A59", "#3DBBFF", "#4CC97C", "#FFC94D", "#ff5fa2"];

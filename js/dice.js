@@ -79,7 +79,7 @@ function rollDiceInCenter(onFinish) {
   const hint = document.getElementById("dice-stage-hint");
   const roll = rollTwoDice();
 
-  if (window.playSound) window.playSound("dice");
+  if (window.playSound) window.playSound("diceRoll");
 
   const done = () => {
     stage.classList.add("hidden");
@@ -99,7 +99,7 @@ function rollDiceInCenter(onFinish) {
     num.textContent = roll.total;
     num.classList.add("show");
     if (hint) hint.textContent = `${roll.d1} + ${roll.d2}${roll.isDouble ? "  ·  더블! 🎉" : ""}`;
-    if (window.playSound) window.playSound("land");
+    if (window.playSound) window.playSound(roll.isDouble ? "keyReveal" : "dice");
   };
 
   stage.classList.remove("hidden", "is-prompt");
