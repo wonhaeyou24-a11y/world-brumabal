@@ -103,9 +103,13 @@ function bindStartScreen() {
         3. 다른 사람의 나라에 도착하면 통행료를 내요.<br>
         &nbsp;&nbsp;&nbsp;<b>내 나라에 다시 도착하면 🏠별장→🏢빌딩→🏨호텔→🗼랜드마크</b>를<br>
         &nbsp;&nbsp;&nbsp;한 단계씩 지어서 <b>통행료를 더 많이</b> 받을 수 있어요!<br>
-        4. <b>❓ 찬스 칸</b>에서는 보너스·퀴즈·여행이 기다려요.<br>
-        5. 방문한 나라는 <b>🧳 여행 도감</b>에 모여요.<br>
-        6. 정해진 턴이 끝나면 총 자산이 가장 많은 사람이 우승!
+        4. <b>모서리 특수 칸</b>을 전략적으로 활용해요:<br>
+        &nbsp;&nbsp;&nbsp;• 🏝️ <b>무인도</b>: 1턴 쉬어가거나 탈출비를 내고 출발해요.<br>
+        &nbsp;&nbsp;&nbsp;• 💝 <b>사회복지기금</b>: 모인 기금을 <b>잭팟</b>으로 몽땅 수령해요!<br>
+        &nbsp;&nbsp;&nbsp;• ✈️ <b>세계여행</b>: 다음 턴에 원하는 나라로 <b>자유롭게 순간이동</b>해요!<br>
+        5. <b>❓ 찬스 칸</b>에서는 보너스·퀴즈·여행이 기다려요.<br>
+        6. 방문한 나라는 <b>🧳 여행 도감</b>에 모여요.<br>
+        7. 정해진 턴이 끝나면 총 자산이 가장 많은 사람이 우승!
       </p>
       <div class="modal-actions">
         <button class="btn btn-primary btn-block" data-action="close-modal">확인했어요</button>
@@ -216,6 +220,7 @@ function bindGameScreen() {
     const ONE_SHOT = [
       "buy-country", "skip-buy", "confirm-arrival", "quiz-answer",
       "quiz-result-to-arrival", "try-purchase-quiz", "exit-to-start", "build-upgrade",
+      "island-rest", "island-pay", "fly-destination",
     ];
     if (ONE_SHOT.includes(action)) {
       const content = btn.closest("#modal-content");
@@ -226,7 +231,7 @@ function bindGameScreen() {
       }
     }
 
-    if (["confirm-arrival", "skip-buy", "close-modal", "quiz-result-to-arrival"].includes(action)) {
+    if (["confirm-arrival", "skip-buy", "close-modal", "quiz-result-to-arrival", "island-rest", "island-pay"].includes(action)) {
       if (window.playSound) window.playSound("select");
     }
 
@@ -238,6 +243,12 @@ function bindGameScreen() {
       handleBuyDecision(false);
     } else if (action === "build-upgrade") {
       handleBuildDecision();
+    } else if (action === "island-rest") {
+      handleIslandDecision(false);
+    } else if (action === "island-pay") {
+      handleIslandDecision(true);
+    } else if (action === "fly-destination") {
+      handleFlyDestination(Number(btn.dataset.tileIndex));
     } else if (action === "try-purchase-quiz") {
       handlePurchaseQuizStart();
     } else if (action === "confirm-arrival") {
@@ -388,7 +399,125 @@ function promptCurrentTurn() {
   if (!gs || gs.status !== "playing") return;
   if (document.getElementById("screen-game").classList.contains("hidden")) return;
   if (isModalOpen()) return;
-  showTurnPrompt(getCurrentPlayer(gs), onDiceClick);
+
+  const player = getCurrentPlayer(gs);
+
+  // 1) 세계여행 대기 중이면 즉시 목적지 선택 모달 오픈
+  if (player.pendingFly) {
+    showWorldTourModal(player);
+    return;
+  }
+
+  // 2) 무인도에 갇혀 있으면 탈출 결정 모달 오픈
+  if (player.islandTurns > 0) {
+    showIslandEscapeModal(player);
+    return;
+  }
+
+  showTurnPrompt(player, onDiceClick);
+}
+
+/** 무인도 탈출 모달 (쉬어가기 vs 탈출비 내고 출발) */
+function showIslandEscapeModal(player) {
+  const gs = window.gameState;
+  const escapeCost = 15; // 15만원
+  const canAfford = player.money >= escapeCost;
+
+  showModal(`
+    <div class="modal-flag">🏝️</div>
+    <h3 class="modal-title">${escapeAttr(player.name)}님은 무인도에 있어요!</h3>
+    <p class="modal-message">
+      잔여 대기: <b>${player.islandTurns}턴</b><br>
+      조용히 쉬어가거나, 탈출비 <b>${won(escapeCost)}</b>을 내고 즉시 출발할 수 있어요.<br>
+      <span style="font-size:0.85rem;color:#c9184a">※ 탈출비는 사회복지기금에 따뜻하게 적립됩니다!</span>
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" data-action="island-rest">🏖️ 1턴 쉬어가기</button>
+      <button class="btn btn-primary" data-action="island-pay" ${canAfford ? "" : "disabled"}>💰 탈출비 내고 출발</button>
+    </div>
+  `);
+}
+
+function handleIslandDecision(payEscape) {
+  const gs = window.gameState;
+  if (!gs || gs.status !== "playing") return;
+  const player = getCurrentPlayer(gs);
+  const escapeCost = 15;
+
+  if (payEscape && player.money >= escapeCost) {
+    player.money -= escapeCost;
+    gs.welfareFund = (gs.welfareFund || 0) + escapeCost; // 복지기금에 기부
+    player.islandTurns = 0;
+    hideModal();
+    renderPlayerPanel(gs);
+    renderBoardDynamic(gs);
+    saveGame(gs);
+    if (window.flashMoney) flashMoney(player.id, -escapeCost);
+    if (window.playSound) window.playSound("coinGain");
+    onDiceClick(); // 즉시 출발
+  } else {
+    // 1턴 쉬기
+    player.islandTurns = Math.max((player.islandTurns || 1) - 1, 0);
+    hideModal();
+    renderPlayerPanel(gs);
+    saveGame(gs);
+    finishTurn();
+  }
+}
+
+/** 세계여행 목적지 선택 모달 */
+function showWorldTourModal(player) {
+  const gs = window.gameState;
+  const tiles = getBoardTiles();
+  const countryTiles = tiles.filter((t) => t.type === "country");
+
+  const cardsHTML = countryTiles.map((t) => {
+    const c = getCountryById(t.countryId);
+    if (!c) return "";
+    const ownerId = getCountryOwnerId(gs, t.countryId);
+    const owner = ownerId != null ? gs.players.find((p) => p.id === ownerId) : null;
+    const bldLv = getBuildingLevel(gs, t.countryId);
+    const bldStage = (window.BUILDING_STAGES || [])[bldLv];
+    const rent = getCurrentRent(gs, t.countryId);
+
+    return `
+      <button type="button" class="tour-pick-item" data-action="fly-destination" data-tile-index="${t.index}">
+        <span class="tour-pick-flag">${flagMarkup(c)}</span>
+        <span class="tour-pick-name">${escapeAttr(c.nameKo)}</span>
+        <span class="tour-pick-meta">
+          ${owner ? (owner.id === player.id ? `<b style="color:var(--sky-deep)">내 땅 ${bldStage?.emoji||""}</b>` : `${escapeAttr(owner.name)}`) : `<b style="color:var(--grass)">빈 땅 (${won(c.price)})</b>`}
+        </span>
+      </button>
+    `;
+  }).join("");
+
+  showModal(`
+    <div class="modal-flag">✈️</div>
+    <h3 class="modal-title">세계여행 목적지를 선택하세요!</h3>
+    <p class="modal-message">어느 나라로 날아갈까요? 원하는 나라를 터치하세요.</p>
+    <div class="tour-grid">${cardsHTML}</div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="btn btn-secondary btn-block" data-action="close-modal">닫기</button>
+    </div>
+  `);
+}
+
+function handleFlyDestination(destIndex) {
+  const gs = window.gameState;
+  if (!gs || gs.status !== "playing") return;
+  const player = getCurrentPlayer(gs);
+  player.pendingFly = false;
+  hideModal();
+
+  if (window.playSound) window.playSound("planeFly");
+  player.position = destIndex;
+  renderBoardDynamic(gs, { landed: true });
+  renderPlayerPanel(gs);
+  saveGame(gs);
+
+  setTimeout(() => {
+    handleArrival();
+  }, 400);
 }
 
 function onDiceClick() {
@@ -460,6 +589,75 @@ function handleArrival() {
         <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
       </div>
     `);
+    return;
+  }
+
+  if (tile.type === "island") {
+    player.islandTurns = 1;
+    if (window.playSound) window.playSound("islandDrop");
+    renderPlayerPanel(gs);
+    renderBoardDynamic(gs);
+    saveGame(gs);
+    const islandHTML = `
+      <div class="modal-flag">🏝️</div>
+      <h3 class="modal-title">무인도 도착</h3>
+      <p class="modal-message">바다 한가운데 무인도에 조난당했어요!<br>다음 차례에 <b>1턴 쉬어가거나</b> 소액의 탈출비로 탈출할 수 있어요.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">확인</button>
+      </div>
+    `;
+    if (window.showFxBurst) {
+      showFxBurst("pop", { emoji: "🏝️", text: "무인도 조난!", onDone: () => showModal(islandHTML) });
+    } else {
+      showModal(islandHTML);
+    }
+    return;
+  }
+
+  if (tile.type === "welfare") {
+    const jackpot = Math.max(gs.welfareFund || 50, 20);
+    player.money += jackpot;
+    gs.welfareFund = 20; // 수령 후 기초 기금으로 초기화
+    renderPlayerPanel(gs);
+    renderBoardDynamic(gs);
+    saveGame(gs);
+    if (window.flashMoney) flashMoney(player.id, jackpot);
+    if (window.playSound) window.playSound("welfareJackpot");
+    const welfareHTML = `
+      <div class="modal-flag">💝</div>
+      <h3 class="modal-title" style="color:var(--grass)">사회복지기금 잭팟!</h3>
+      <p class="modal-message">그동안 쌓인 따뜻한 복지기금<br><b style="font-size:1.4rem;color:#c9184a">💰 ${won(jackpot)}</b>을 모두 받았어요! 🎉</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">감사합니다!</button>
+      </div>
+    `;
+    if (window.showFxBurst) {
+      showFxBurst("buy", { text: `기금 대박! +${won(jackpot)}`, onDone: () => showModal(welfareHTML) });
+    } else {
+      showModal(welfareHTML);
+    }
+    return;
+  }
+
+  if (tile.type === "travel") {
+    player.pendingFly = true;
+    if (window.playSound) window.playSound("planeFly");
+    renderPlayerPanel(gs);
+    renderBoardDynamic(gs);
+    saveGame(gs);
+    const travelHTML = `
+      <div class="modal-flag">✈️</div>
+      <h3 class="modal-title" style="color:var(--sky-deep)">세계여행 공항 도착</h3>
+      <p class="modal-message">여권을 챙기세요! 🧳<br>다음 차례에 주사위를 굴리지 않고<br><b>원하는 나라로 어디든 즉시 날아갑니다!</b></p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">기대돼요!</button>
+      </div>
+    `;
+    if (window.showFxBurst) {
+      showFxBurst("pop", { emoji: "✈️", text: "세계여행 대기!", onDone: () => showModal(travelHTML) });
+    } else {
+      showModal(travelHTML);
+    }
     return;
   }
 
@@ -974,7 +1172,8 @@ function aiResolveModal(gs, player, overlay) {
   if (has("toggle-sound") || has("toggle-anim")) return;
   const actionable =
     has("buy-country") || has("skip-buy") || has("confirm-arrival") ||
-    has("quiz-answer") || has("quiz-result-to-arrival") || has("try-purchase-quiz");
+    has("quiz-answer") || has("quiz-result-to-arrival") || has("try-purchase-quiz") ||
+    has("island-pay") || has("island-rest") || has("fly-destination");
   if (!actionable) return;
 
   // 1) 퀴즈 보기가 있으면 답을 고른다
@@ -1005,18 +1204,38 @@ function aiResolveModal(gs, player, overlay) {
     return;
   }
 
-  // 3) 내 나라 건설 카드 — 여유 자금이 있을 때만 짓는다
-  if (has("build-upgrade") && has("confirm-arrival")) {
-    const target = pendingBuild ? getNextBuildInfo(gs, pendingBuild.countryId) : null;
-    if (target && aiShouldBuild(player, target.cost) && !has("build-upgrade").disabled) {
-      aiClick(has("build-upgrade"));
+  // 4) 무인도 탈출 결정 — 여유 자금(60만 이상)이 있으면 탈출비 내고 즉시 출발
+  if (has("island-pay") || has("island-rest")) {
+    if (player.money >= 60 && has("island-pay") && !has("island-pay").disabled) {
+      aiClick(has("island-pay"));
     } else {
-      aiClick(has("confirm-arrival"));
+      aiClick(has("island-rest"));
     }
     return;
   }
 
-  // 4) 그 외 진행 버튼은 그냥 누른다
+  // 5) 세계여행 목적지 선택 — 빈 땅 중 비싼 곳 또는 내 땅 우선
+  if (has("fly-destination")) {
+    const items = Array.from(overlay.querySelectorAll('[data-action="fly-destination"]'));
+    if (items.length > 0) {
+      // 우선순위 1: 살 수 있는 빈 땅 중 가장 비싼 곳
+      const unowned = items.filter((el) => el.textContent.includes("빈 땅"));
+      if (unowned.length > 0) {
+        aiClick(unowned[Math.floor(Math.random() * unowned.length)]);
+      } else {
+        // 우선순위 2: 내 땅 (건물 업그레이드)
+        const myLands = items.filter((el) => el.textContent.includes("내 땅"));
+        if (myLands.length > 0) {
+          aiClick(myLands[0]);
+        } else {
+          aiClick(items[Math.floor(Math.random() * items.length)]);
+        }
+      }
+      return;
+    }
+  }
+
+  // 6) 그 외 진행 버튼은 그냥 누른다
   aiClick(has("confirm-arrival") || has("quiz-result-to-arrival") || has("close-modal"));
 }
 

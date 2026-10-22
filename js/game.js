@@ -46,6 +46,7 @@ function createInitialGameState(playerConfigs, settings = {}) {
     boardCountryIds,          // 이번 판 게임판에 올린 국가 (이어하기 시 동일 배치 재현)
     countryOwners: {},        // countryId -> playerId
     buildings: {},            // countryId -> 건물 단계(0~4, 없으면 0)
+    welfareFund: 50,          // 사회복지기금 적립금 (만원 단위, 초기 50만원)
     visitedCountries: {},     // playerId -> [countryId, ...]
     settings: { startMoney, maxTurns, endMode },
     isMoving: false,          // 이동/애니메이션 중 다른 조작 방지 플래그

@@ -689,3 +689,40 @@
   background: #fff6e0;
   border-color: var(--sun);
 }
+
+/* ---------- 세계여행 목적지 선택 그리드 ---------- */
+.tour-grid {
+  width: 100%;
+  max-height: 52vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  padding: 4px;
+}
+.tour-pick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: #ffffff;
+  border: 2px solid #1e2a55;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 rgba(30, 42, 85, 0.16);
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.1s;
+}
+.tour-pick-item:hover {
+  background: #f0f9ff;
+  border-color: #3dbbff;
+}
+.tour-pick-item:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(30, 42, 85, 0.16);
+}
+.tour-pick-flag { font-size: 1.6rem; line-height: 1; }
+.tour-pick-name { font-family: "Jua", sans-serif; font-size: 1rem; color: #1e2a55; }
+.tour-pick-meta { font-size: 0.78rem; color: #64748b; }
+

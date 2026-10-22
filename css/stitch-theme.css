@@ -144,6 +144,13 @@ body {
 .tile-name { color: var(--st-navy); }
 .tile-capital { color: var(--st-sky-lip); }
 .tile--start { background: linear-gradient(160deg, #fff0a3 0%, var(--st-sun) 100%); }
+.tile--island { background: linear-gradient(160deg, #ffe8d6 0%, #ffcfa8 100%); }
+.tile--island .tile-name { color: #a2551f; }
+.tile--welfare { background: linear-gradient(160deg, #ffe5ec 0%, #ffb3c6 100%); }
+.tile--welfare .tile-name { color: #c9184a; }
+.tile--welfare [data-welfare-amount] { color: #800f2f; font-weight: bold; }
+.tile--travel { background: linear-gradient(160deg, #e0f2fe 0%, #7dd3fc 100%); }
+.tile--travel .tile-name { color: #0369a1; }
 .tile--rest { background: linear-gradient(160deg, #ffdede 0%, #ffb3b0 100%); }
 .tile--rest .tile-name { color: #8c1520; }
 .tile--event { background: linear-gradient(155deg, #d7fbe4 0%, var(--st-mint) 100%); }

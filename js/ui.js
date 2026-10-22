@@ -165,6 +165,15 @@ function buildBoardDOMOnce(gameState) {
     if (tile.type === "start") {
       tileEl.className = "tile tile--start";
       tileEl.innerHTML = `<div class="tile-icon">🚩</div><div class="tile-name">출발</div>`;
+    } else if (tile.type === "island") {
+      tileEl.className = "tile tile--island";
+      tileEl.innerHTML = `<div class="tile-icon">🏝️</div><div class="tile-name">무인도</div><div class="tile-capital">탈출 도전</div>`;
+    } else if (tile.type === "welfare") {
+      tileEl.className = "tile tile--welfare";
+      tileEl.innerHTML = `<div class="tile-icon">💝</div><div class="tile-name">사회복지</div><div class="tile-capital" data-welfare-amount>모금처</div>`;
+    } else if (tile.type === "travel") {
+      tileEl.className = "tile tile--travel";
+      tileEl.innerHTML = `<div class="tile-icon">✈️</div><div class="tile-name">세계여행</div><div class="tile-capital">자유이동</div>`;
     } else if (tile.type === "rest") {
       tileEl.className = "tile tile--rest";
       tileEl.innerHTML = `<div class="tile-icon">🍔</div><div class="tile-name">쉼터</div>`;
@@ -290,6 +299,13 @@ function renderBoardDynamic(gameState, opts = {}) {
 
   const centerTurnText = document.getElementById("center-turn-text");
   if (centerTurnText) centerTurnText.textContent = `${gameState.turn} / ${gameState.maxTurns}턴`;
+
+  // 사회복지기금 칸에 현재 누적 금액 표시
+  const welfareEl = document.querySelector("[data-welfare-amount]");
+  if (welfareEl && gameState) {
+    const fund = gameState.welfareFund || 0;
+    welfareEl.textContent = `적립 ${won(fund)}`;
+  }
 }
 
 /* ---------------------------------------------------------
@@ -320,7 +336,12 @@ function renderPlayerPanel(gameState) {
     .map((p, i) => {
       const isCurrent = i === gameState.currentPlayerIndex && !p.isBankrupt;
       const count = p.ownedCountries.length;
-      const status = p.isBankrupt ? "💀 파산" : isCurrent ? "내 차례!" : "여행 중";
+      let status = "여행 중";
+      if (p.isBankrupt) status = "💀 파산";
+      else if (p.islandTurns > 0) status = `🏝️ 무인도 (${p.islandTurns}턴)`;
+      else if (p.pendingFly) status = "✈️ 세계여행 준비";
+      else if (isCurrent) status = "내 차례!";
+
       return `
         <div class="player-card ${isCurrent ? "is-current" : ""} ${p.isBankrupt ? "is-bankrupt" : ""}"
              data-player-id="${p.id}" style="--chip-color:${p.color}">
@@ -331,11 +352,13 @@ function renderPlayerPanel(gameState) {
             </span>
             <div class="pc-body">
               <div class="pc-tags">
-                <span>🚩 ${count}</span><span>🏨 ${window.countPlayerBuildings ? countPlayerBuildings(gameState, p) : 0}</span><span>🏝️ 0</span>
+                <span>🚩 ${count}</span>
+                <span>🏨 ${window.countPlayerBuildings ? countPlayerBuildings(gameState, p) : 0}</span>
+                <span>${p.islandTurns > 0 ? `🏝️ ${p.islandTurns}턴` : p.pendingFly ? `✈️ 대기` : `🏝️ 0`}</span>
               </div>
               <div class="pc-money">💰 ${won(p.money)}</div>
               <div class="pc-sub">
-                <span>🎴 스페셜 0</span>
+                <span>💝 기금 ${won(gameState.welfareFund || 0)}</span>
                 <span class="pc-status ${isCurrent ? "on" : ""} ${p.isBankrupt ? "bankrupt" : ""}">${status}</span>
               </div>
             </div>

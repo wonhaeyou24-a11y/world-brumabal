@@ -15,6 +15,8 @@ function createPlayer(id, name, pieceId, color, startMoney, isAI = false) {
     isBankrupt: false,     // 파산 여부 (2차 개발 확장용, 현재는 항상 false)
     isAI: !!isAI,          // AI가 대신 플레이하는 플레이어인지
     buildingInvest: 0,     // 건물 건설에 쓴 누적 금액(순자산에 포함)
+    islandTurns: 0,        // 무인도 갇힌 남은 턴수 (0이면 자유)
+    pendingFly: false,     // 세계여행 칸에서 다음 턴 비행 대기 여부
   };
 }
 

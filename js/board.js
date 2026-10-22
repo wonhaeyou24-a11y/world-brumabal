@@ -113,8 +113,12 @@ function buildBoardTiles(options = {}) {
     const { row, col } = coords[i];
     if (i === 0) {
       tiles.push({ index: i, type: "start", row, col });
-    } else if (cornerIndexes.includes(i)) {
-      tiles.push({ index: i, type: "rest", row, col });
+    } else if (i === side - 1) {
+      tiles.push({ index: i, type: "island", row, col });
+    } else if (i === 2 * (side - 1)) {
+      tiles.push({ index: i, type: "welfare", row, col });
+    } else if (i === 3 * (side - 1)) {
+      tiles.push({ index: i, type: "travel", row, col });
     } else if (seqCursor < fillSeq.length) {
       const item = fillSeq[seqCursor++];
       if (item.kind === "country") {
