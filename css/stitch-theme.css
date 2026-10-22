@@ -1,0 +1,199 @@
+/* ==========================================================
+   stitch-theme.css
+   Google Stitch 디자인 시스템 "Blue Marble Wonder Journey" 반영 레이어
+   - 가장 마지막에 로드되어 기존 CSS 위에 덧씌워집니다. (JS 로직 무관, 순수 스타일)
+   - 핵심: 칙칙한 3D 버튼(아래 두꺼운 립), 글로시 둥근 카드, 네이비 외곽선, 하늘색 그라데이션
+   - 외부 리소스/스크립트 없음 (보안: 외부 코드 주입 불가)
+   ========================================================== */
+
+:root {
+  /* Stitch 색상 토큰 */
+  --st-sky: #3dbbff;
+  --st-sky-lip: #1a8fd6;
+  --st-sun: #ffd23f;
+  --st-sun-lip: #d4a017;
+  --st-mint: #4ade80;
+  --st-mint-lip: #1f9d52;
+  --st-coral: #ff6b6b;
+  --st-coral-lip: #d03a3a;
+  --st-navy: #1e2a55;
+  --st-surface: #faf8ff;
+  --st-surface-low: #f3f2ff;
+  --st-outline: rgba(30, 42, 85, 0.85);
+  /* 기존 변수도 Stitch 팔레트로 교체 → 전체 화면에 자동 반영 */
+  --sun: var(--st-sun);
+  --coral: var(--st-coral);
+  --grass: var(--st-mint);
+  --navy: var(--st-navy);
+  --cream: var(--st-surface);
+  --radius-lg: 24px;
+  --shadow-soft: 0 5px 0 rgba(30, 42, 85, 0.16), 0 12px 24px rgba(30, 42, 85, 0.22);
+}
+
+/* ---------- 배경: 하늘색 → 청록 그라데이션 + 부드러운 하이라이트 ---------- */
+body {
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, rgba(61, 187, 255, 0.28) 0%, rgba(74, 222, 200, 0.18) 100%),
+    url("../assets/bg/world.jpg");
+  background-size: cover, cover, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed, fixed, fixed;
+}
+
+/* ---------- 3D 액션 버튼 (알약형 + 아래 립 + 위 하이라이트) ---------- */
+.btn {
+  border: 3px solid var(--st-navy);
+  letter-spacing: 0.01em;
+  position: relative;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.06); }
+.btn-primary {
+  background: linear-gradient(180deg, #ffe46b 0%, var(--st-sun) 100%);
+  color: var(--st-navy);
+  box-shadow: 0 6px 0 var(--st-sun-lip), 0 12px 20px rgba(30, 42, 85, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.75);
+}
+.btn-secondary {
+  background: linear-gradient(180deg, #ffffff 0%, #e8f6ff 100%);
+  color: var(--st-navy);
+  border: 3px solid var(--st-navy);
+  box-shadow: 0 6px 0 var(--st-sky-lip), 0 12px 20px rgba(30, 42, 85, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.9);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 rgba(30, 42, 85, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- 시작 화면 타이틀: 입체 외곽선 ---------- */
+.start-title {
+  color: var(--st-sun);
+  -webkit-text-stroke: 2px var(--st-navy);
+  paint-order: stroke fill;
+  text-shadow: 0 4px 0 var(--st-navy), 0 10px 18px rgba(30, 42, 85, 0.35);
+}
+
+/* ---------- 설정 카드 / 모달: 글로시 둥근 카드 + 네이비 외곽선 ---------- */
+.setup-card {
+  background: linear-gradient(180deg, #ffffff 0%, var(--st-surface-low) 100%);
+  border: 3px solid var(--st-navy);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 rgba(30, 42, 85, 0.18), 0 20px 40px rgba(30, 42, 85, 0.25),
+    inset 0 3px 0 rgba(255, 255, 255, 0.95);
+}
+.modal-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background: rgba(14, 38, 92, 0.5);
+}
+.modal-content {
+  background: linear-gradient(180deg, #ffffff 0%, var(--st-surface) 100%);
+  border: 3px solid var(--st-navy);
+}
+@media (max-width: 559px) {
+  .modal-content { border-bottom: 0; }
+}
+
+/* ---------- 선택 칩 (인원수·옵션) ---------- */
+.count-chip,
+.option-chip {
+  border: 2px solid var(--st-navy);
+  box-shadow: 0 3px 0 rgba(30, 42, 85, 0.25);
+  font-family: "Jua", sans-serif;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.count-chip.active,
+.option-chip.active {
+  background: linear-gradient(180deg, #ffe46b 0%, var(--st-sun) 100%);
+  color: var(--st-navy);
+  box-shadow: 0 3px 0 var(--st-sun-lip), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.count-chip:active,
+.option-chip:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(30, 42, 85, 0.25); }
+
+/* ---------- 게임판: 하늘색 글로시 프레임 ---------- */
+.board {
+  background: linear-gradient(150deg, #8fd8ff 0%, #c9f1ff 50%, #f4fcff 100%);
+  border: 4px solid var(--st-navy);
+  box-shadow: 0 8px 0 rgba(30, 42, 85, 0.2), 0 20px 36px rgba(30, 42, 85, 0.28),
+    inset 0 3px 0 rgba(255, 255, 255, 0.8);
+}
+.board-center {
+  background: radial-gradient(circle at 50% 35%, #ffffff 0%, #dff4ff 62%, #a9defa 100%);
+  border: 2px solid rgba(30, 42, 85, 0.35);
+}
+.board-center .center-title {
+  color: var(--st-navy);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ---------- 칸: 글로시 카드 (소유 칸 주인색 테두리는 그대로 보존) ---------- */
+.tile {
+  border: 2px solid var(--st-outline);
+}
+.tile:not(.tile--owned) {
+  box-shadow: 0 3px 0 rgba(30, 42, 85, 0.22), 0 6px 10px rgba(30, 42, 85, 0.1),
+    inset 0 2px 0 rgba(255, 255, 255, 0.85);
+}
+.tile:not(.tile--start):not(.tile--rest):not(.tile--event):not(.tile--owned) {
+  background: linear-gradient(180deg, #ffffff 0%, var(--st-surface-low) 100%);
+}
+.tile-name { color: var(--st-navy); }
+.tile-capital { color: var(--st-sky-lip); }
+.tile--start { background: linear-gradient(160deg, #fff0a3 0%, var(--st-sun) 100%); }
+.tile--rest { background: linear-gradient(160deg, #ffdede 0%, #ffb3b0 100%); }
+.tile--rest .tile-name { color: #8c1520; }
+.tile--event { background: linear-gradient(155deg, #d7fbe4 0%, var(--st-mint) 100%); }
+.tile--event .tile-name { color: #0f5c2e; }
+
+/* ---------- 주사위 스테이지: 황금빛 3D 굴리기 버튼 ---------- */
+.ds-card {
+  background: linear-gradient(180deg, #ffffff 0%, #e4f5ff 100%);
+  border: 3px solid var(--st-navy);
+  box-shadow: 0 8px 0 rgba(30, 42, 85, 0.2), 0 24px 56px rgba(30, 42, 85, 0.4),
+    0 0 0 6px rgba(255, 210, 63, 0.9), inset 0 3px 0 rgba(255, 255, 255, 0.95);
+}
+.ds-btn {
+  background: linear-gradient(180deg, #ffe46b 0%, var(--st-sun) 100%);
+  border: 3px solid var(--st-navy);
+  box-shadow: 0 8px 0 var(--st-sun-lip), 0 16px 24px rgba(30, 42, 85, 0.28),
+    inset 0 3px 0 rgba(255, 255, 255, 0.8);
+}
+.ds-btn:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 var(--st-sun-lip), inset 0 3px 0 rgba(255, 255, 255, 0.6);
+}
+.dice-stage-num {
+  color: var(--st-coral);
+  -webkit-text-stroke: clamp(2px, 1cqmin, 6px) var(--st-navy);
+  paint-order: stroke fill;
+}
+.ds-hint { color: var(--st-sky-lip); font-weight: 700; }
+
+/* ---------- 플레이어 HUD: 알약 카드 + 현재 턴 발광 링 ---------- */
+.player-card {
+  background: linear-gradient(180deg, #ffffff 0%, var(--st-surface-low) 100%);
+  border: 3px solid var(--st-navy);
+  box-shadow: 0 6px 0 rgba(30, 42, 85, 0.2), 0 12px 22px rgba(30, 42, 85, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.95);
+}
+.player-card.is-current {
+  border-color: var(--st-navy);
+  background: linear-gradient(180deg, #fffbe0 0%, #fff0a8 100%);
+  box-shadow: 0 0 0 4px var(--chip-color, var(--st-sun)),
+    0 0 22px 6px rgba(255, 210, 63, 0.55),
+    0 8px 0 rgba(30, 42, 85, 0.22), inset 0 2px 0 rgba(255, 255, 255, 0.95);
+  animation: st-turn-glow 1.6s ease-in-out infinite;
+}
+@keyframes st-turn-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.07); }
+}
+
+/* ---------- 모션 감소 설정 존중 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .player-card.is-current { animation: none; }
+}
