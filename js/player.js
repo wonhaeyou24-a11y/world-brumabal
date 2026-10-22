@@ -14,16 +14,17 @@ function createPlayer(id, name, pieceId, color, startMoney, isAI = false) {
     ownedCountries: [],    // 소유 국가 ID 배열
     isBankrupt: false,     // 파산 여부 (2차 개발 확장용, 현재는 항상 false)
     isAI: !!isAI,          // AI가 대신 플레이하는 플레이어인지
+    buildingInvest: 0,     // 건물 건설에 쓴 누적 금액(순자산에 포함)
   };
 }
 
-/** 플레이어의 총 자산 = 현금 + 소유 국가 구매가 합 */
+/** 플레이어의 총 자산 = 현금 + 소유 국가 구매가 합 + 건물 투자액 */
 function getPlayerNetWorth(player) {
   const countryValue = player.ownedCountries.reduce((sum, countryId) => {
     const country = getCountryById(countryId);
     return sum + (country ? country.price : 0);
   }, 0);
-  return player.money + countryValue;
+  return player.money + countryValue + (player.buildingInvest || 0);
 }
 
 window.createPlayer = createPlayer;

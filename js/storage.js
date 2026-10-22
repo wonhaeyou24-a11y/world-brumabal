@@ -26,7 +26,12 @@ function loadGame() {
   try {
     const raw = window.localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    // 건물 정보 검증·정리 (옛 저장본은 빈 값으로, 범위 밖/남의 땅 값은 제거)
+    if (data && Array.isArray(data.players) && window.sanitizeBuildings) {
+      try { window.sanitizeBuildings(data); } catch (e) { data.buildings = {}; }
+    }
+    return data;
   } catch (err) {
     console.error("불러오기 실패(저장 데이터 손상 가능):", err);
     return null;

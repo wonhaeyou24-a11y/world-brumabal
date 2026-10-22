@@ -45,6 +45,7 @@ function createInitialGameState(playerConfigs, settings = {}) {
     boardLength: tiles.length,
     boardCountryIds,          // 이번 판 게임판에 올린 국가 (이어하기 시 동일 배치 재현)
     countryOwners: {},        // countryId -> playerId
+    buildings: {},            // countryId -> 건물 단계(0~4, 없으면 0)
     visitedCountries: {},     // playerId -> [countryId, ...]
     settings: { startMoney, maxTurns, endMode },
     isMoving: false,          // 이동/애니메이션 중 다른 조작 방지 플래그
@@ -101,6 +102,7 @@ function computeFinalResults(gameState) {
       player: p,
       cash: p.money,
       countryCount: p.ownedCountries.length,
+      buildingCount: window.countPlayerBuildings ? countPlayerBuildings(gameState, p) : 0,
       netWorth: p.isBankrupt ? -1 : getPlayerNetWorth(p),
       bankrupt: !!p.isBankrupt,
     }))

@@ -179,6 +179,7 @@ function buildBoardDOMOnce(gameState) {
         <div class="tile-name">${c.nameKo}</div>
         <div class="tile-capital">${c.capitalKo}</div>
         <div class="tile-owner-bar" data-owner-bar></div>
+        <div class="tile-building" data-building></div>
       `;
     }
 
@@ -196,6 +197,44 @@ function buildBoardDOMOnce(gameState) {
  * opts.hopPlayerId : 이 플레이어의 말에 "깡총" 애니메이션을 준다 (이동 중 한 칸씩)
  * opts.landed      : true면 도착 칸을 "쿵" 강조한다
  */
+/**
+ * 칸 위 건물 배지 갱신. 단계가 바뀔 때만 다시 그려 매 렌더마다 애니메이션이 재생되는 것을 막는다.
+ * 사용자 입력이 아닌 고정 데이터(BUILDING_STAGES, 나라 데이터)만 사용한다.
+ * opts.builtCountryId : 방금 건물을 지은 나라 — 건설 애니메이션 대상
+ */
+function renderTileBuilding(tileEl, tile, gameState, opts = {}) {
+  const slot = tileEl.querySelector("[data-building]");
+  if (!slot) return;
+  const level = window.getBuildingLevel ? getBuildingLevel(gameState, tile.countryId) : 0;
+  const prev = Number(tileEl.dataset.bldLevel || 0);
+  const justBuilt = opts.builtCountryId === tile.countryId;
+
+  if (level === prev && !justBuilt && slot.dataset.ready === "1") return;
+  slot.dataset.ready = "1";
+  tileEl.dataset.bldLevel = String(level);
+  tileEl.classList.toggle("tile--landmark", level >= (window.BUILDING_MAX_LEVEL ?? 4));
+
+  if (level <= 0) {
+    slot.innerHTML = "";
+    slot.className = "tile-building";
+    return;
+  }
+  const stage = (window.BUILDING_STAGES || [])[level];
+  const country = getCountryById(tile.countryId);
+  if (!stage || !country) { slot.innerHTML = ""; return; }
+
+  const pips = Array.from({ length: Math.min(level, 3) }, () => "<i></i>").join("");
+  const photo =
+    level >= 4
+      ? `<img class="bld-photo" src="${country.landmarkImg}" alt="" onerror="this.classList.add('is-missing')" />`
+      : "";
+  slot.className = `tile-building tile-building--l${level}` + (justBuilt ? " is-new" : "");
+  slot.title = `${stage.label} (통행료 ×${stage.rentMul})`;
+  slot.innerHTML =
+    `${photo}<span class="bld-icon">${stage.emoji}</span>` +
+    (level < 4 ? `<span class="bld-pips">${pips}</span>` : `<span class="bld-crown">✨</span>`);
+}
+
 function renderBoardDynamic(gameState, opts = {}) {
   // 소유권 색 표시
   currentBoardTiles.forEach((tile) => {
@@ -213,6 +252,7 @@ function renderBoardDynamic(gameState, opts = {}) {
       tileEl.style.setProperty("--owner-color", owner.color);
       tileEl.classList.add("tile--owned");
     }
+    renderTileBuilding(tileEl, tile, gameState, opts);
   });
 
   // 말 위치 표시
@@ -291,7 +331,7 @@ function renderPlayerPanel(gameState) {
             </span>
             <div class="pc-body">
               <div class="pc-tags">
-                <span>🚩 ${count}</span><span>🏨 0</span><span>🏝️ 0</span>
+                <span>🚩 ${count}</span><span>🏨 ${window.countPlayerBuildings ? countPlayerBuildings(gameState, p) : 0}</span><span>🏝️ 0</span>
               </div>
               <div class="pc-money">💰 ${won(p.money)}</div>
               <div class="pc-sub">
@@ -343,7 +383,7 @@ function renderResultScreen(gameState) {
         <span class="result-piece">${pieceMarkup(playerPiece(r.player), "lg")}</span>
         <div style="flex:1">
           <div class="result-name">${escapeHtml(r.player.name)}</div>
-          <div class="result-detail">${r.bankrupt ? "파산" : `보유 국가 ${r.countryCount}개 · 현금 ${won(r.cash)}`}</div>
+          <div class="result-detail">${r.bankrupt ? "파산" : `보유 국가 ${r.countryCount}개 · 건물 ${r.buildingCount || 0}개 · 현금 ${won(r.cash)}`}</div>
         </div>
         <div class="result-detail" style="font-weight:bold;color:var(--sky-deep)">${r.bankrupt ? "" : "총 " + won(r.netWorth)}</div>
       </div>
@@ -428,6 +468,7 @@ function buildCountryCard(country, opts = {}) {
   if ("myMoney" in opts) rows.push(["💰 나의 자금", won(opts.myMoney), "money"]);
   if ("price" in opts) rows.push(["🏷️ 가격", opts.priceLabelHTML || won(opts.price), "raw"]);
   if ("rent" in opts) rows.push(["🚉 통행료", won(opts.rent)]);
+  if (opts.building) rows.push(["🏗️ 건물", `${opts.building.emoji} ${opts.building.label} (×${opts.building.rentMul})`]);
 
   const rowsHTML = rows
     .map(([k, v, cls]) => {

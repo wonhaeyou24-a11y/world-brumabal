@@ -101,6 +101,8 @@ function bindStartScreen() {
         2. 도착한 나라가 비어 있으면 살 수 있어요.<br>
         &nbsp;&nbsp;&nbsp;수도 퀴즈를 맞히면 <b>20% 싸게</b> 살 수 있어요!<br>
         3. 다른 사람의 나라에 도착하면 통행료를 내요.<br>
+        &nbsp;&nbsp;&nbsp;<b>내 나라에 다시 도착하면 🏠별장→🏢빌딩→🏨호텔→🗼랜드마크</b>를<br>
+        &nbsp;&nbsp;&nbsp;한 단계씩 지어서 <b>통행료를 더 많이</b> 받을 수 있어요!<br>
         4. <b>❓ 찬스 칸</b>에서는 보너스·퀴즈·여행이 기다려요.<br>
         5. 방문한 나라는 <b>🧳 여행 도감</b>에 모여요.<br>
         6. 정해진 턴이 끝나면 총 자산이 가장 많은 사람이 우승!
@@ -213,7 +215,7 @@ function bindGameScreen() {
     // 진행(턴을 바꾸거나 상태를 넘기는) 버튼은 한 번만 — 연타/AI 중복클릭으로 턴이 건너뛰는 것 방지
     const ONE_SHOT = [
       "buy-country", "skip-buy", "confirm-arrival", "quiz-answer",
-      "quiz-result-to-arrival", "try-purchase-quiz", "exit-to-start",
+      "quiz-result-to-arrival", "try-purchase-quiz", "exit-to-start", "build-upgrade",
     ];
     if (ONE_SHOT.includes(action)) {
       const content = btn.closest("#modal-content");
@@ -234,6 +236,8 @@ function bindGameScreen() {
       handleBuyDecision(true);
     } else if (action === "skip-buy") {
       handleBuyDecision(false);
+    } else if (action === "build-upgrade") {
+      handleBuildDecision();
     } else if (action === "try-purchase-quiz") {
       handlePurchaseQuizStart();
     } else if (action === "confirm-arrival") {
@@ -337,6 +341,7 @@ function showCountrySwapModal() {
 let pendingArrival = null; // { countryId, discountRate, quizDone }
 let pendingQuiz = null;    // { quiz, context: "purchase" | "event" }
 let pendingEventCard = null;
+let pendingBuild = null;   // { countryId } — 내 나라 도착 시 건설 선택 대기
 
 /** 일정 시간 뒤, "다음으로" 모달이 그대로 떠 있으면 자동으로 다음 차례로 넘긴다 */
 let autoAdvanceTimer = null;
@@ -495,13 +500,9 @@ function handleArrival() {
     pendingArrival = { countryId: tile.countryId, discountRate: 0, quizDone: false };
     showArrivalCard();
   } else if (ownerId === player.id) {
-    showModal(`
-      ${buildCountryCard(country, { travelerName: player.name, ownerName: `${player.name}(나)` })}
-      <p class="modal-message">이미 내가 가진 나라예요! 🏠</p>
-      <div class="modal-actions">
-        <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
-      </div>
-    `);
+    // 내 나라에 다시 도착 → 건물을 한 단계 짓을 수 있다
+    pendingBuild = { countryId: tile.countryId };
+    showBuildCard();
   } else {
     const owner = gs.players.find((p) => p.id === ownerId);
     const result = payRentIfNeeded(gs, gs.players, player, tile.countryId);
@@ -527,7 +528,7 @@ function handleArrival() {
     const rentModalHTML = `
       <div class="modal-flag">💸</div>
       <h3 class="modal-title" style="color:var(--coral)">${escapeAttr(owner.name)}의 나라에 걸렸어요!</h3>
-      ${buildCountryCard(country, { travelerName: player.name, ownerName: owner.name, myMoney: player.money })}
+      ${buildCountryCard(country, { travelerName: player.name, ownerName: owner.name, myMoney: player.money, rent: result.amount, building: getBuildingStageOf(gs, tile.countryId) })}
       <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-${won(result.amount)}</span></div>
       <div class="modal-rent-row positive"><span>${pcMarkup(owner)} ${escapeAttr(owner.name)}</span><span>+${won(result.amount)}</span></div>
       <button class="btn btn-primary btn-block modal-tap-hint" data-action="confirm-arrival">👆 화면을 터치하면 넘어가요</button>
@@ -536,6 +537,116 @@ function handleArrival() {
       text: `${owner.name}에게 통행료 ${won(result.amount)}!`,
       onDone: () => showModal(rentModalHTML, { tapAnywhere: true }),
     });
+  }
+}
+
+/* ---------------------------------------------------------
+   건물 업그레이드 (별장 → 빌딩 → 호텔 → 랜드마크)
+--------------------------------------------------------- */
+/** 나라의 현재 건물 단계 정보 (없으면 null) */
+function getBuildingStageOf(gs, countryId) {
+  const lv = getBuildingLevel(gs, countryId);
+  return lv > 0 ? (window.BUILDING_STAGES || [])[lv] || null : null;
+}
+
+/** 내 나라 도착 카드: 현재 단계와 다음 단계 건설 선택 */
+function showBuildCard() {
+  const gs = window.gameState;
+  if (!gs || !pendingBuild) return;
+  const player = getCurrentPlayer(gs);
+  const country = getCountryById(pendingBuild.countryId);
+  if (!country) { finishTurn(); return; }
+
+  const stages = window.BUILDING_STAGES || [];
+  const level = getBuildingLevel(gs, country.id);
+  const cur = stages[level] || stages[0];
+  const rentNow = getCurrentRent(gs, country.id);
+  const info = getNextBuildInfo(gs, country.id);
+  const card = buildCountryCard(country, {
+    travelerName: player.name,
+    ownerName: `${player.name}(나)`,
+    myMoney: player.money,
+    rent: rentNow,
+    building: level > 0 ? cur : null,
+  });
+
+  if (!info) {
+    showModal(`
+      ${card}
+      <p class="modal-message">🗼 <b>랜드마크</b>까지 다 지었어요!<br>더 이상 짓지 못해요.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
+      </div>
+    `);
+    pendingBuild = null;
+    return;
+  }
+
+  const affordable = player.money >= info.cost;
+  showModal(`
+    ${card}
+    <div class="build-panel">
+      <div class="build-now">현재 ${cur.emoji} ${escapeAttr(cur.label)} · 통행료 <b>${won(rentNow)}</b></div>
+      <div class="build-next">
+        <span class="build-next-icon">${info.stage.emoji}</span>
+        <span class="build-next-text">
+          <b>${escapeAttr(info.stage.label)}</b> 짓기 <b class="build-cost">${won(info.cost)}</b><br>
+          통행료 <b>${won(rentNow)}</b> → <b class="build-rent-up">${won(info.rentAfter)}</b> (×${info.stage.rentMul})
+        </span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" data-action="confirm-arrival">지나가기</button>
+      <button class="btn btn-primary" data-action="build-upgrade" ${affordable ? "" : "disabled"}>🔨 짓기</button>
+    </div>
+    ${affordable ? "" : `<p class="modal-message" style="font-size:0.85rem;color:var(--coral)">돈이 부족해서 짓지 못해요</p>`}
+  `);
+}
+
+/** 건설 확정 — 한 번만 처리(중복 클릭·AI 재클릭 방지), 오류가 나도 턴은 정상 진행 */
+function handleBuildDecision() {
+  const gs = window.gameState;
+  if (!gs || gs.status !== "playing") return;
+  const target = pendingBuild;
+  pendingBuild = null; // 먼저 소비
+  if (!target) return;
+
+  try {
+    const player = getCurrentPlayer(gs);
+    const country = getCountryById(target.countryId);
+    const res = buildNextLevel(gs, player, target.countryId);
+    if (!res || !country) { finishTurn(); return; }
+
+    hideModal();
+    renderBoardDynamic(gs, { builtCountryId: country.id });
+    renderPlayerPanel(gs);
+    saveGame(gs);
+    if (window.flashMoney) flashMoney(player.id, -res.cost);
+    const isLandmark = res.level >= (window.BUILDING_MAX_LEVEL ?? 4);
+    if (window.playSound) window.playSound(isLandmark ? "buildLandmark" : "build");
+
+    const rentNow = getCurrentRent(gs, country.id);
+    const doneHTML = `
+      ${buildCountryCard(country, { travelerName: player.name, ownerName: `${player.name}(나)`, myMoney: player.money, rent: rentNow, building: res.stage })}
+      <h3 class="modal-title" style="color:var(--grass)">${res.stage.emoji} ${escapeAttr(res.stage.label)} 완공!</h3>
+      <p class="modal-message">이제 다른 친구가 이 나라에 걸리면<br>통행료 <b>${won(rentNow)}</b>를 내요!</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
+      </div>
+    `;
+    const fxText = `${country.nameKo} ${res.stage.label} 완공!`;
+    const showDone = () => {
+      showModal(doneHTML);
+      autoAdvance(2600); // 잠깐 보여주고 자동으로 다음 차례로
+    };
+    if (window.showFxBurst) {
+      showFxBurst(isLandmark ? "buy" : "pop", { emoji: res.stage.emoji, text: fxText, onDone: showDone });
+    } else {
+      showDone();
+    }
+  } catch (err) {
+    console.error("건설 처리 오류:", err);
+    finishTurn();
   }
 }
 
@@ -780,6 +891,7 @@ function finishTurn() {
   pendingArrival = null;
   pendingQuiz = null;
   pendingEventCard = null;
+  pendingBuild = null;
   gs.isMoving = false;
   advanceTurn(gs);
   saveGame(gs);
@@ -893,7 +1005,18 @@ function aiResolveModal(gs, player, overlay) {
     return;
   }
 
-  // 3) 그 외 진행 버튼은 그냥 누른다
+  // 3) 내 나라 건설 카드 — 여유 자금이 있을 때만 짓는다
+  if (has("build-upgrade") && has("confirm-arrival")) {
+    const target = pendingBuild ? getNextBuildInfo(gs, pendingBuild.countryId) : null;
+    if (target && aiShouldBuild(player, target.cost) && !has("build-upgrade").disabled) {
+      aiClick(has("build-upgrade"));
+    } else {
+      aiClick(has("confirm-arrival"));
+    }
+    return;
+  }
+
+  // 4) 그 외 진행 버튼은 그냥 누른다
   aiClick(has("confirm-arrival") || has("quiz-result-to-arrival") || has("close-modal"));
 }
 
