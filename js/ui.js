@@ -245,7 +245,7 @@ function renderTileBuilding(tileEl, tile, gameState, opts = {}) {
 }
 
 function renderBoardDynamic(gameState, opts = {}) {
-  // 소유권 색 표시
+  // 소유권 색 표시 및 대륙 독점 뱃지
   currentBoardTiles.forEach((tile) => {
     if (tile.type !== "country") return;
     const tileEl = document.querySelector(`.tile[data-index="${tile.index}"]`);
@@ -254,12 +254,17 @@ function renderBoardDynamic(gameState, opts = {}) {
     if (ownerId === null) {
       bar.innerHTML = "";
       tileEl.style.removeProperty("--owner-color");
-      tileEl.classList.remove("tile--owned");
+      tileEl.classList.remove("tile--owned", "tile--monopoly");
     } else {
       const owner = gameState.players.find((p) => p.id === ownerId);
-      bar.innerHTML = `<span class="tile-owner-piece">${pieceMarkup(playerPiece(owner), "sm")}</span>`;
+      const country = getCountryById(tile.countryId);
+      const isMono = country && window.isContinentMonopolized && isContinentMonopolized(gameState, country.continent, ownerId);
+      bar.innerHTML =
+        `<span class="tile-owner-piece">${pieceMarkup(playerPiece(owner), "sm")}</span>` +
+        (isMono ? `<span class="tile-mono-crown" title="${escapeHtml(country.continent)} 독점! 통행료 ×1.5">👑</span>` : "");
       tileEl.style.setProperty("--owner-color", owner.color);
       tileEl.classList.add("tile--owned");
+      tileEl.classList.toggle("tile--monopoly", !!isMono);
     }
     renderTileBuilding(tileEl, tile, gameState, opts);
   });
@@ -342,6 +347,10 @@ function renderPlayerPanel(gameState) {
       else if (p.pendingFly) status = "✈️ 세계여행 준비";
       else if (isCurrent) status = "내 차례!";
 
+      const monos = window.getMonopolizedContinents ? getMonopolizedContinents(gameState, p.id) : [];
+      const shieldTag = (p.tollShield > 0) ? `<span class="pc-tag-shield">🎟️ ${p.tollShield}</span>` : "";
+      const monoTags = monos.map((m) => `<span class="pc-tag-mono" title="${escapeHtml(m)} 대륙 독점! 통행료 ×1.5">👑 ${escapeHtml(m)}</span>`).join("");
+
       return `
         <div class="player-card ${isCurrent ? "is-current" : ""} ${p.isBankrupt ? "is-bankrupt" : ""}"
              data-player-id="${p.id}" style="--chip-color:${p.color}">
@@ -354,7 +363,8 @@ function renderPlayerPanel(gameState) {
               <div class="pc-tags">
                 <span>🚩 ${count}</span>
                 <span>🏨 ${window.countPlayerBuildings ? countPlayerBuildings(gameState, p) : 0}</span>
-                <span>${p.islandTurns > 0 ? `🏝️ ${p.islandTurns}턴` : p.pendingFly ? `✈️ 대기` : `🏝️ 0`}</span>
+                ${shieldTag}
+                ${monoTags}
               </div>
               <div class="pc-money">💰 ${won(p.money)}</div>
               <div class="pc-sub">

@@ -64,13 +64,39 @@ function getBuildingLevel(gameState, countryId) {
   return clampBuildingLevel(gameState.buildings[countryId]);
 }
 
-/** 특정 나라의 현재 통행료 = 기본 통행료 × 건물 단계 배수 */
+/**
+ * 특정 대륙이 한 플레이어에 의해 독점(Monopoly)되었는지 검사한다.
+ * 현재 게임판에 배치된 해당 대륙의 모든 국가를 소유해야 한다.
+ */
+function isContinentMonopolized(gameState, continent, ownerId) {
+  if (!gameState || !continent || ownerId === null || ownerId === undefined) return false;
+  const tiles = (window.getBoardTiles ? window.getBoardTiles() : []) || [];
+  const continentTiles = tiles.filter((t) => {
+    if (t.type !== "country") return false;
+    const c = getCountryById(t.countryId);
+    return c && c.continent === continent;
+  });
+  if (continentTiles.length === 0) return false;
+  return continentTiles.every((t) => getCountryOwnerId(gameState, t.countryId) === ownerId);
+}
+
+/** 특정 플레이어가 독점하고 있는 대륙 이름 목록을 반환한다 */
+function getMonopolizedContinents(gameState, playerId) {
+  if (!gameState || playerId === null || playerId === undefined) return [];
+  const continents = ["아시아", "유럽", "북아메리카", "남아메리카", "아프리카", "오세아니아"];
+  return continents.filter((cont) => isContinentMonopolized(gameState, cont, playerId));
+}
+
+/** 특정 나라의 현재 통행료 = 기본 통행료 × 건물 단계 배수 × (대륙 독점 시 1.5배) */
 function getCurrentRent(gameState, countryId) {
   const country = getCountryById(countryId);
   if (!country) return 0;
   const stage = (window.BUILDING_STAGES || [])[getBuildingLevel(gameState, countryId)];
   const mul = stage ? stage.rentMul : 1;
-  return Math.round(country.rent * mul);
+  const ownerId = getCountryOwnerId(gameState, countryId);
+  const isMono = isContinentMonopolized(gameState, country.continent, ownerId);
+  const monoMul = isMono ? 1.5 : 1.0;
+  return Math.round(country.rent * mul * monoMul);
 }
 
 /**
@@ -129,12 +155,14 @@ function sanitizeBuildings(gameState) {
   (gameState.players || []).forEach((p) => {
     const inv = Math.floor(Number(p.buildingInvest));
     p.buildingInvest = Number.isFinite(inv) && inv > 0 ? inv : 0;
+    const shield = Math.floor(Number(p.tollShield));
+    p.tollShield = Number.isFinite(shield) && shield > 0 ? shield : 0;
   });
 }
 
 /**
  * 통행료를 지급한다.
- * 반환: { ownerId, amount, bankrupt } (bankrupt=true면 낼 돈이 모자라 파산) 또는 통행료 대상이 아니면 null
+ * 반환: { ownerId, amount, bankrupt, shielded, isMonopoly } 또는 통행료 대상이 아니면 null
  */
 function payRentIfNeeded(gameState, players, payer, countryId) {
   const ownerId = getCountryOwnerId(gameState, countryId);
@@ -142,18 +170,32 @@ function payRentIfNeeded(gameState, players, payer, countryId) {
 
   const country = getCountryById(countryId);
   const owner = players.find((p) => p.id === ownerId);
-  const rent = getCurrentRent(gameState, countryId); // 건물 단계 배수 반영
+  const rent = getCurrentRent(gameState, countryId);
+  const isMono = isContinentMonopolized(gameState, country ? country.continent : "", ownerId);
+
+  // 🎟️ 통행료 면제 우대권(tollShield) 보유 시 0원 방어
+  if (payer.tollShield && payer.tollShield > 0) {
+    payer.tollShield--;
+    return {
+      ownerId,
+      amount: rent,
+      shielded: true,
+      bankrupt: false,
+      isMonopoly: isMono,
+      continent: country?.continent,
+    };
+  }
 
   if (payer.money < rent) {
     // 낼 돈이 모자람 → 가진 돈을 주인에게 넘기고 파산
     owner.money += Math.max(payer.money, 0);
     bankruptPlayer(gameState, payer);
-    return { ownerId, amount: rent, paid: owner.money, bankrupt: true };
+    return { ownerId, amount: rent, paid: owner.money, bankrupt: true, shielded: false, isMonopoly: isMono, continent: country?.continent };
   }
 
   payer.money -= rent;
   owner.money += rent;
-  return { ownerId, amount: rent, bankrupt: false };
+  return { ownerId, amount: rent, bankrupt: false, shielded: false, isMonopoly: isMono, continent: country?.continent };
 }
 
 window.getCountryOwnerId = getCountryOwnerId;
@@ -169,3 +211,5 @@ window.canBuildNext = canBuildNext;
 window.buildNextLevel = buildNextLevel;
 window.countPlayerBuildings = countPlayerBuildings;
 window.sanitizeBuildings = sanitizeBuildings;
+window.isContinentMonopolized = isContinentMonopolized;
+window.getMonopolizedContinents = getMonopolizedContinents;

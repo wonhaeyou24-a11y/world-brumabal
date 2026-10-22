@@ -17,6 +17,7 @@ function createPlayer(id, name, pieceId, color, startMoney, isAI = false) {
     buildingInvest: 0,     // 건물 건설에 쓴 누적 금액(순자산에 포함)
     islandTurns: 0,        // 무인도 갇힌 남은 턴수 (0이면 자유)
     pendingFly: false,     // 세계여행 칸에서 다음 턴 비행 대기 여부
+    tollShield: 0,         // 통행료 면제 우대권 보유 수
   };
 }
 

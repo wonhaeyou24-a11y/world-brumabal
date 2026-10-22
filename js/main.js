@@ -769,6 +769,30 @@ function handleArrival() {
     const result = payRentIfNeeded(gs, gs.players, player, tile.countryId);
     renderBoardDynamic(gs);
     renderPlayerPanel(gs);
+
+    // 🎟️ 통행료 면제 우대권으로 방어한 경우
+    if (result.shielded) {
+      if (window.playSound) window.playSound("keyReveal");
+      const shieldHTML = `
+        <div class="modal-flag">🎟️</div>
+        <h3 class="modal-title" style="color:var(--st-sun, #ffd23f)">우대권 사용!</h3>
+        <p class="modal-message">
+          <b>${escapeAttr(owner.name)}</b>의 나라(원래 통행료 ${won(result.amount)})에 도착했지만,<br>
+          소지하고 있던 <b>🎟️ 통행료 면제 우대권</b>이 발동되어<br>
+          <b style="font-size:1.35rem;color:var(--grass, #4ade80)">통행료 0원(무료 통과)!</b>
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-primary btn-block" data-action="confirm-arrival">다행이다! 휴~</button>
+        </div>
+      `;
+      if (window.showFxBurst) {
+        showFxBurst("pop", { emoji: "🎟️", text: "우대권 방어!", onDone: () => showModal(shieldHTML) });
+      } else {
+        showModal(shieldHTML);
+      }
+      return;
+    }
+
     if (window.flashMoney) flashMoney(owner.id, result.amount);
     if (window.playSound) window.playSound("rentImpact");
 
@@ -786,10 +810,14 @@ function handleArrival() {
     }
 
     if (window.flashMoney) flashMoney(player.id, -result.amount);
+    const monoNotice = result.isMonopoly
+      ? `<div class="modal-monopoly-notice">👑 [${result.continent}] 대륙 독점 보너스 ×1.5배 적용!</div>`
+      : "";
     const rentModalHTML = `
       <div class="modal-flag">💸</div>
       <h3 class="modal-title" style="color:var(--coral)">${escapeAttr(owner.name)}의 나라에 걸렸어요!</h3>
       ${buildCountryCard(country, { travelerName: player.name, ownerName: owner.name, myMoney: player.money, rent: result.amount, building: getBuildingStageOf(gs, tile.countryId) })}
+      ${monoNotice}
       <div class="modal-rent-row negative"><span>${pcMarkup(player)} ${escapeAttr(player.name)}</span><span>-${won(result.amount)}</span></div>
       <div class="modal-rent-row positive"><span>${pcMarkup(owner)} ${escapeAttr(owner.name)}</span><span>+${won(result.amount)}</span></div>
       <button class="btn btn-primary btn-block modal-tap-hint" data-action="confirm-arrival">👆 화면을 터치하면 넘어가요</button>
@@ -1000,24 +1028,125 @@ function handleEventTile() {
     return;
   }
 
-  if (card.type === "travel") {
+  if (card.type === "free_upgrade") {
+    const gs = window.gameState;
+    const player = getCurrentPlayer(gs);
+    const res = applyFreeUpgrade(gs, player);
+    renderBoardDynamic(gs, { builtCountryId: res.countryId });
+    renderPlayerPanel(gs);
+    saveGame(gs);
+    if (res.success) {
+      if (window.playSound) window.playSound(res.level >= 4 ? "buildLandmark" : "build");
+      showModal(`
+        <div class="modal-flag">🏗️</div>
+        <h3 class="modal-title" style="color:var(--grass)">무료 건축 지원권!</h3>
+        <p class="modal-message">
+          소유한 <b>${escapeAttr(res.countryName)}</b>에<br>
+          <b>${res.stage.emoji} ${escapeAttr(res.stage.label)}</b>(통행료 ×${res.stage.rentMul})을 무료로 올렸어요! ✨
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-primary btn-block" data-action="confirm-arrival">신난다!</button>
+        </div>
+      `);
+    } else {
+      if (window.playSound) window.playSound("coinGain");
+      showModal(`
+        <div class="modal-flag">🎁</div>
+        <h3 class="modal-title">특별 여행 지원금</h3>
+        <p class="modal-message">
+          아직 건물을 올릴 소유 나라가 없어서<br>
+          대신 따뜻한 여행 지원금 <b>${won(res.fallbackBonus)}</b>을 받았어요!
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-primary btn-block" data-action="confirm-arrival">감사합니다!</button>
+        </div>
+      `);
+    }
+    return;
+  }
+
+  if (card.type === "toll_shield") {
+    const gs = window.gameState;
+    const player = getCurrentPlayer(gs);
+    const res = applyTollShield(player);
+    renderPlayerPanel(gs);
+    saveGame(gs);
+    if (window.playSound) window.playSound("keyReveal");
+    showModal(`
+      <div class="modal-flag">🎟️</div>
+      <h3 class="modal-title" style="color:var(--st-sun, #ffd23f)">통행료 면제 우대권!</h3>
+      <p class="modal-message">
+        상대방의 비싼 랜드마크에 걸렸을 때<br>
+        <b>자동으로 통행료를 0원으로 막아주는</b><br>
+        황금 우대권을 획득했어요! (보유: ${res.count}장)
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">든든하다!</button>
+      </div>
+    `);
+    return;
+  }
+
+  if (card.type === "welfare_gift") {
+    const gs = window.gameState;
+    const player = getCurrentPlayer(gs);
+    const res = applyWelfareGift(gs, player, card.amount || 20);
+    renderPlayerPanel(gs);
+    saveGame(gs);
+    if (window.flashMoney) flashMoney(player.id, res.amount);
+    if (window.playSound) window.playSound("coinGain");
+    showModal(`
+      <div class="modal-flag">💝</div>
+      <h3 class="modal-title" style="color:var(--grass)">복지기금 특별 장학금</h3>
+      <p class="modal-message">
+        성실한 세계 탐험가로 선정되어<br>
+        복지기금에서 <b>+${won(res.amount)}</b>의 장학금을 지원받았어요!
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">감사합니다!</button>
+      </div>
+    `);
+    return;
+  }
+
+  if (card.type === "jump") {
     const gs = window.gameState;
     const player = getCurrentPlayer(gs);
     const tiles = getBoardTiles();
-    const res = applyTravelEvent(gs, player, tiles);
-    if (!res) {
-      finishTurn();
-      return;
-    }
-    markVisit(gs, player.id, res.countryId);
-    renderBoardDynamic(gs);
+    const res = applyJumpEvent(gs, player, card.steps, tiles);
+    renderBoardDynamic(gs, { landed: true });
+    renderPlayerPanel(gs);
     saveGame(gs);
-    const country = getCountryById(res.countryId);
+    if (window.playSound) window.playSound(card.steps > 0 ? "step" : "pop");
     showModal(`
-      ${buildCountryCard(country, { travelerName: player.name })}
-      <p class="modal-message">✈️ <b>${escapeAttr(country.nameKo)}</b>(으)로 여행을 떠났어요!<br>도감에 기록됐어요 🧳</p>
+      <div class="modal-flag">${card.emoji}</div>
+      <h3 class="modal-title">${card.title}</h3>
+      <p class="modal-message">${escapeAttr(card.desc)}<br><b style="color:var(--sky-deep)">${card.steps > 0 ? `앞으로 ${card.steps}칸 전진!` : `뒤로 ${Math.abs(card.steps)}칸 후진!`}</b></p>
       <div class="modal-actions">
-        <button class="btn btn-primary btn-block" data-action="confirm-arrival">다음으로</button>
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">확인</button>
+      </div>
+    `);
+    return;
+  }
+
+  if (card.type === "go_airport") {
+    const gs = window.gameState;
+    const player = getCurrentPlayer(gs);
+    const tiles = getBoardTiles();
+    const res = applyGoAirport(gs, player, tiles);
+    renderBoardDynamic(gs, { landed: true });
+    renderPlayerPanel(gs);
+    saveGame(gs);
+    if (window.playSound) window.playSound("planeFly");
+    showModal(`
+      <div class="modal-flag">🛫</div>
+      <h3 class="modal-title" style="color:var(--sky-deep)">공항 직행 고속티켓!</h3>
+      <p class="modal-message">
+        세계여행(공항) 칸으로 즉시 이동했어요!<br>
+        <b>다음 차례에 원하는 나라로 바로 날아갑니다! ✈️</b>
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" data-action="confirm-arrival">좋았어!</button>
       </div>
     `);
     return;
