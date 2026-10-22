@@ -542,6 +542,55 @@ function grantPassStartBonus(gs, player, oldPos, steps) {
   }
 }
 
+/** 타일 바닥에 만화 발자국 먼지(Puff Dust) 파티클을 퐁 피워 올린다 */
+function spawnTileDust(tileIndex) {
+  try {
+    const tiles = getBoardTiles();
+    const tile = tiles[tileIndex % tiles.length];
+    if (!tile) return;
+    const tileEl = document.querySelector(`.tile[data-index="${tile.index}"]`);
+    if (!tileEl) return;
+    const dust = document.createElement("span");
+    dust.className = "hop-dust";
+    tileEl.appendChild(dust);
+    setTimeout(() => {
+      if (dust && dust.parentNode) dust.parentNode.removeChild(dust);
+    }, 380);
+  } catch (e) {
+    // 무중단 안전 보장
+  }
+}
+
+/** 최종 도착 시 타일 충격파 링과 보드 화면 진동(Screen Shake) 발동 */
+function triggerArrivalImpact(tileIndex) {
+  try {
+    const tiles = getBoardTiles();
+    const tile = tiles[tileIndex % tiles.length];
+    if (!tile) return;
+    const tileEl = document.querySelector(`.tile[data-index="${tile.index}"]`);
+    if (tileEl) {
+      tileEl.classList.remove("tile--shockwave");
+      void tileEl.offsetWidth;
+      tileEl.classList.add("tile--shockwave");
+      setTimeout(() => {
+        if (tileEl) tileEl.classList.remove("tile--shockwave");
+      }, 550);
+    }
+
+    const board = document.getElementById("board");
+    if (board) {
+      board.classList.remove("board--impact-shake");
+      void board.offsetWidth;
+      board.classList.add("board--impact-shake");
+      setTimeout(() => {
+        if (board) board.classList.remove("board--impact-shake");
+      }, 320);
+    }
+  } catch (e) {
+    // 무중단 안전 보장
+  }
+}
+
 function animateMove(steps) {
   const gs = window.gameState;
   const player = getCurrentPlayer(gs);
@@ -557,18 +606,32 @@ function animateMove(steps) {
   }
 
   let remaining = steps;
-  const stepInterval = setInterval(() => {
+  function doNextStep() {
+    if (remaining <= 0) {
+      // 최종 도착
+      grantPassStartBonus(gs, player, oldPos, steps);
+      triggerArrivalImpact(player.position);
+      if (window.playSound) window.playSound("heavyLand");
+      setTimeout(() => handleArrival(), 400);
+      return;
+    }
+
     player.position = (player.position + 1) % boardLength;
     remaining--;
-    const last = remaining <= 0;
+    const last = remaining === 0;
+
+    // 만화 발자국 먼지 생성
+    spawnTileDust(player.position);
+
     renderBoardDynamic(gs, { hopPlayerId: player.id, landed: last });
-    if (window.playSound) window.playSound(last ? "land" : "step");
-    if (last) {
-      clearInterval(stepInterval);
-      grantPassStartBonus(gs, player, oldPos, steps);
-      setTimeout(() => handleArrival(), 380);
-    }
-  }, 300);
+    if (window.playSound) window.playSound(last ? "heavyLand" : "step");
+
+    // 역동적인 리듬 가감속: 출발 시 240ms, 중간 200ms, 마지막 칸 직전 300ms 서스펜스
+    const nextDelay = last ? 320 : (remaining === 1 ? 280 : 210);
+    setTimeout(doNextStep, nextDelay);
+  }
+
+  doNextStep();
 }
 
 /* ---------------------------------------------------------

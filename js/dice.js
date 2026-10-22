@@ -1,9 +1,10 @@
 /**
  * dice.js
- * 게임판 가운데에 "차례 + 주사위" 카드를 띄운다.
+ * 게임판 가운데에 "차례 + 3D 주사위" 카드를 띄운다.
  *  - 사람 차례: 카드를 눌러 주사위를 굴린다
  *  - AI 차례: 카드만 보여주고, AI 드라이버가 rollDiceInCenter를 호출한다
- * 주사위는 카드 안에서 굴러가고, 나온 숫자를 크게 "쾅" 보여준 뒤 이동한다.
+ *
+ * 3D 입체 텀블링 애니메이션과 실시간 도트 플리커, 착지 슬램다운, 더블 골드 연출이 포함됩니다.
  */
 
 const DICE_FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
@@ -17,6 +18,34 @@ function rollTwoDice() {
   const d1 = rollDiceValue();
   const d2 = rollDiceValue();
   return { d1, d2, total: d1 + d2, isDouble: d1 === d2 };
+}
+
+/**
+ * 1~6 주사위 눈금(Pip) HTML을 생성한다.
+ * 3x3 그리드 규격 (1과 5의 중앙 도트는 전통 브루마블 시그니처 크림슨 레드)
+ */
+function renderDicePipHTML(val) {
+  const v = Math.min(6, Math.max(1, Number(val) || 1));
+  let pips = "";
+  if (v === 1) {
+    pips = `<i class="pip pip-c red"></i>`;
+  } else if (v === 2) {
+    pips = `<i class="pip pip-tl"></i><i class="pip pip-br"></i>`;
+  } else if (v === 3) {
+    pips = `<i class="pip pip-tl"></i><i class="pip pip-c"></i><i class="pip pip-br"></i>`;
+  } else if (v === 4) {
+    pips = `<i class="pip pip-tl"></i><i class="pip pip-tr"></i><i class="pip pip-bl"></i><i class="pip pip-br"></i>`;
+  } else if (v === 5) {
+    pips = `<i class="pip pip-tl"></i><i class="pip pip-tr"></i><i class="pip pip-c red"></i><i class="pip pip-bl"></i><i class="pip pip-br"></i>`;
+  } else if (v === 6) {
+    pips = `<i class="pip pip-tl"></i><i class="pip pip-tr"></i><i class="pip pip-ml"></i><i class="pip pip-mr"></i><i class="pip pip-bl"></i><i class="pip pip-br"></i>`;
+  }
+  return `<span class="dice-face dice-face--${v}">${pips}</span>`;
+}
+
+function setDieFace(dieEl, val) {
+  if (!dieEl) return;
+  dieEl.innerHTML = renderDicePipHTML(val);
 }
 
 /** 차례 카드를 띄운다. onRoll: 사람이 카드를 눌렀을 때 실행 (없으면 = AI 차례, 안 눌림) */
@@ -39,10 +68,12 @@ function showTurnPrompt(player, onRoll) {
       : "";
   turn.innerHTML = `${piece}<span class="ds-name">${player.name}${player.isAI ? " 🤖" : ""}의 차례!</span>${turnTxt}`;
   if (dice) dice.hidden = false;
-  die.textContent = "🎲";
-  die2.textContent = "🎲";
-  die.classList.remove("rolling");
-  die2.classList.remove("rolling");
+
+  // 초기 주사위 눈 설정 (1, 2)
+  setDieFace(die, 1);
+  setDieFace(die2, 2);
+  die.className = "dice-stage-die";
+  die2.className = "dice-stage-die";
   num.textContent = "";
   num.classList.remove("show");
 
@@ -69,7 +100,7 @@ function hideTurnPrompt() {
   if (stage) stage.classList.add("hidden");
 }
 
-/** 차례 카드 안에서 주사위를 굴리고, 결과를 onFinish(value)로 넘긴다 */
+/** 차례 카드 안에서 3D 주사위를 굴리고, 결과를 onFinish(value, roll)로 넘긴다 */
 function rollDiceInCenter(onFinish) {
   const stage = document.getElementById("dice-stage");
   const dice = document.getElementById("dice-stage-dice");
@@ -85,21 +116,29 @@ function rollDiceInCenter(onFinish) {
     stage.classList.add("hidden");
     stage.classList.remove("is-open", "is-prompt", "is-rolling");
     num.classList.remove("show");
-    die.classList.remove("rolling");
-    die2.classList.remove("rolling");
+    die.className = "dice-stage-die";
+    die2.className = "dice-stage-die";
     onFinish(roll.total, roll);
   };
 
   const showResult = () => {
-    die.classList.remove("rolling");
-    die2.classList.remove("rolling");
-    die.textContent = DICE_FACES[roll.d1 - 1];
-    die2.textContent = DICE_FACES[roll.d2 - 1];
-    if (dice) dice.hidden = true;
+    setDieFace(die, roll.d1);
+    setDieFace(die2, roll.d2);
+    die.className = "dice-stage-die slam-down" + (roll.isDouble ? " is-double" : "");
+    die2.className = "dice-stage-die slam-down" + (roll.isDouble ? " is-double" : "");
+    if (dice) dice.hidden = false;
     num.textContent = roll.total;
     num.classList.add("show");
-    if (hint) hint.textContent = `${roll.d1} + ${roll.d2}${roll.isDouble ? "  ·  더블! 🎉" : ""}`;
-    if (window.playSound) window.playSound(roll.isDouble ? "keyReveal" : "dice");
+
+    if (roll.isDouble) {
+      if (hint) {
+        hint.innerHTML = `<span class="ds-double-badge">🎉 더블!! [${roll.d1} + ${roll.d2}] 한 번 더!</span>`;
+      }
+      if (window.playSound) window.playSound("doubleFanfare");
+    } else {
+      if (hint) hint.textContent = `${roll.d1} + ${roll.d2} = ${roll.total}칸 이동!`;
+      if (window.playSound) window.playSound("dice");
+    }
   };
 
   stage.classList.remove("hidden", "is-prompt");
@@ -108,8 +147,7 @@ function rollDiceInCenter(onFinish) {
   num.textContent = "";
   num.classList.remove("show");
   if (dice) dice.hidden = false;
-  die.textContent = "🎲";
-  die2.textContent = "🎲";
+
   void stage.offsetWidth;
 
   const reduced = window.prefersReducedAnim && window.prefersReducedAnim();
@@ -119,12 +157,21 @@ function rollDiceInCenter(onFinish) {
     return;
   }
 
-  die.classList.add("rolling");
-  die2.classList.add("rolling");
+  // 3D 텀블링 롤링 애니메이션 시작
+  die.className = "dice-stage-die tumble-1";
+  die2.className = "dice-stage-die tumble-2";
+
+  // 실시간 주사위 눈 플리커 (초고속 도트 회전 착시)
+  const flickerTimer = setInterval(() => {
+    setDieFace(die, Math.floor(Math.random() * 6) + 1);
+    setDieFace(die2, Math.floor(Math.random() * 6) + 1);
+  }, 45);
+
   setTimeout(() => {
+    clearInterval(flickerTimer);
     showResult();
-    setTimeout(done, 1100);
-  }, 900);
+    setTimeout(done, 1200);
+  }, 850);
 }
 
 window.rollDiceValue = rollDiceValue;
@@ -132,3 +179,5 @@ window.rollTwoDice = rollTwoDice;
 window.rollDiceInCenter = rollDiceInCenter;
 window.showTurnPrompt = showTurnPrompt;
 window.hideTurnPrompt = hideTurnPrompt;
+window.renderDicePipHTML = renderDicePipHTML;
+window.setDieFace = setDieFace;
