@@ -4,7 +4,7 @@
  * CACHE_VERSION을 올리면 이전 캐시를 지우고 새 리소스로 교체한다(업데이트 안 되는 문제 방지).
  */
 
-const CACHE_VERSION = "world-brumabal-v36";
+const CACHE_VERSION = "world-brumabal-v37";
 
 const CORE_ASSETS = [
   "./",
@@ -48,9 +48,21 @@ const CORE_ASSETS = [
   "./assets/pieces/mom.png",
   "./assets/intro/intro-poster.jpg",
   "./assets/bg/world.jpg",
+  "./assets/sounds/dice_roll.wav",
+  "./assets/sounds/dice_land.wav",
+  "./assets/sounds/coin.wav",
+  "./assets/sounds/token_hop.wav",
+  "./assets/sounds/heavy_land.wav",
+  "./assets/sounds/build.wav",
+  "./assets/sounds/fanfare.wav",
+  "./assets/sounds/windchime.wav",
+  "./assets/sounds/airplane.wav",
+  "./assets/sounds/click.wav",
+  "./assets/sounds/button.wav",
+  "./assets/sounds/wood_tap.wav",
 ];
 
-// 설치 시점에 필수는 아니지만 있으면 캐시해 두는 것(영상·랜드마크 사진) — 실패해도 설치는 계속
+// 설치 시점에 필수는 아니지만 있으면 캐시해 두는 것(영상·랜드마크 사진·배경음악) — 실패해도 설치는 계속
 const LANDMARK_IDS = [
   "KR","JP","CN","IN","TH","VN","SG","TR","MN","ID","PH","MY","NP","KH",
   "GB","FR","DE","IT","ES","NL","CH","SE","GR","RU","PT","AT","NO","PL","CZ","IE",
@@ -61,6 +73,7 @@ const LANDMARK_IDS = [
 ];
 const EXTRA_ASSETS = [
   "./assets/intro/intro.mp4",
+  "./assets/sounds/bgm_travel.ogg",
   ...LANDMARK_IDS.map((id) => `./assets/landmarks/${id}.jpg`),
   ...LANDMARK_IDS.map((id) => `./assets/flags/${id}.svg`),
 ];

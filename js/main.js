@@ -60,6 +60,7 @@ function bindStartScreen() {
 
   continueBtn.addEventListener("click", () => {
     if (window.unlockAudio) window.unlockAudio();
+    if (window.startBGM) window.startBGM();
     const saved = loadGame();
     if (!saved || !Array.isArray(saved.players) || saved.players.length < 2) {
       // 저장 데이터 손상 — 정리하고 버튼 비활성
@@ -150,6 +151,7 @@ function bindSetupScreen() {
 
   document.getElementById("btn-start-playing").addEventListener("click", () => {
     if (window.unlockAudio) window.unlockAudio();
+    if (window.startBGM) window.startBGM();
     const configs = readSetupPlayerConfigs();
     window.gameState = createInitialGameState(configs, {
       startMoney: selectedStartMoney,
@@ -176,6 +178,14 @@ function bindGameScreen() {
     renderCollectionScreen(window.gameState);
     showScreen("screen-collection");
   });
+
+  const btnToggleBgm = document.getElementById("btn-toggle-bgm");
+  if (btnToggleBgm) {
+    btnToggleBgm.addEventListener("click", () => {
+      if (window.unlockAudio) window.unlockAudio();
+      if (window.toggleBGM) window.toggleBGM();
+    });
+  }
 
   document.getElementById("btn-open-settings-game").addEventListener("click", () => {
     if (isModalOpen()) return;
@@ -258,6 +268,7 @@ function bindGameScreen() {
     } else if (action === "quiz-result-to-arrival") {
       showArrivalCard();
     } else if (action === "exit-to-start") {
+      if (window.pauseBGM) window.pauseBGM();
       const gs = window.gameState;
       if (gs) saveGame(gs);
       hideModal();
@@ -1288,6 +1299,7 @@ function finishTurn() {
 
   if (gs.status === "ended") {
     clearSavedGame();
+    if (window.pauseBGM) window.pauseBGM();
     if (window.playSound) window.playSound("win");
     renderResultScreen(gs);
     showScreen("screen-result");

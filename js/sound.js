@@ -1,13 +1,77 @@
 /**
  * sound.js
- * 효과음 재생. 지금은 오디오 파일 없이 Web Audio API로 간단한 음을 합성한다.
- * 나중에 /assets/sounds/ 에 실제 음원을 넣으면 playSound 내부만 교체하면 된다.
+ * 고품질 리얼 오디오(BGM 및 실제 효과음 파일) 재생 엔진.
  *
- * 브라우저 자동재생 정책 때문에 첫 사용자 인터랙션 때 unlockAudio()를 호출해야 한다.
+ * 주요 기능:
+ *  1. BGM: 닌텐도풍 어쿠스틱 여행 테마 음악(Off to Osaka) 끊김 없는 루프 재생
+ *  2. SFX: 실제 주사위 달그락, 동전 짤랑, 카툰 깡총 도약, 팡파레 등 고음질 오디오 파일 재생
+ *  3. Fallback: 오디오 파일 로딩 불가 시 Web Audio 오실레이터 자동 폴백 (Zero-Crash Policy)
+ *  4. 편의성: BGM 및 SFX 온/오프 토글 지원
  */
 
 let _audioCtx = null;
 let _unlocked = false;
+let _bgmAudio = null;
+let _bgmEnabled = true;
+
+// 로컬 저장소에서 BGM 설정 복원
+try {
+  const savedBgm = localStorage.getItem("brumabal_bgm_enabled");
+  if (savedBgm !== null) {
+    _bgmEnabled = savedBgm === "1";
+  }
+} catch (e) {
+  _bgmEnabled = true;
+}
+
+// 오디오 파일 매핑 (고품질 리얼 오디오)
+const AUDIO_FILE_MAP = {
+  diceRoll: "assets/sounds/dice_roll.wav",
+  dice: "assets/sounds/dice_land.wav",
+  step: "assets/sounds/token_hop.wav",
+  heavyLand: "assets/sounds/heavy_land.wav",
+  land: "assets/sounds/heavy_land.wav",
+  coinGain: "assets/sounds/coin.wav",
+  coinLoss: "assets/sounds/coin.wav",
+  build: "assets/sounds/build.wav",
+  buildLandmark: "assets/sounds/fanfare.wav",
+  doubleFanfare: "assets/sounds/fanfare.wav",
+  win: "assets/sounds/fanfare.wav",
+  keyReveal: "assets/sounds/windchime.wav",
+  planeFly: "assets/sounds/airplane.wav",
+  select: "assets/sounds/click.wav",
+  buy: "assets/sounds/coin.wav",
+  buyFanfare: "assets/sounds/fanfare.wav",
+  welfareJackpot: "assets/sounds/fanfare.wav",
+  islandDrop: "assets/sounds/heavy_land.wav",
+  restStop: "assets/sounds/wood_tap.wav",
+};
+
+// 지연 없는 즉각 재생을 위한 오디오 객체 캐시 풀
+const _audioPool = {};
+
+function _getAudioInstance(name) {
+  const src = AUDIO_FILE_MAP[name];
+  if (!src) return null;
+  if (!_audioPool[name]) {
+    _audioPool[name] = [];
+  }
+  // 사용 가능한 오디오 인스턴스 검색 (최대 4개 풀)
+  for (const aud of _audioPool[name]) {
+    if (aud.paused || aud.ended) {
+      aud.currentTime = 0;
+      return aud;
+    }
+  }
+  if (_audioPool[name].length < 4) {
+    const aud = new Audio(src);
+    _audioPool[name].push(aud);
+    return aud;
+  }
+  const aud = _audioPool[name][0];
+  aud.currentTime = 0;
+  return aud;
+}
 
 function _ctx() {
   if (!_audioCtx) {
@@ -18,15 +82,75 @@ function _ctx() {
   return _audioCtx;
 }
 
-/** 첫 사용자 제스처에서 호출 — 오디오 컨텍스트 잠금 해제 */
+/** 첫 사용자 제스처(클릭/터치) 시 오디오 언락 및 BGM 시작 */
 function unlockAudio() {
   const ctx = _ctx();
-  if (!ctx) return;
-  if (ctx.state === "suspended") ctx.resume();
+  if (ctx && ctx.state === "suspended") {
+    ctx.resume();
+  }
   _unlocked = true;
+
+  // BGM 자동 시작
+  if (_bgmEnabled && (!_bgmAudio || _bgmAudio.paused)) {
+    startBGM();
+  }
 }
 
-/** 단음 하나를 재생 */
+/** BGM 초기화 및 재생 */
+function initBGM() {
+  if (_bgmAudio) return;
+  try {
+    _bgmAudio = new Audio("assets/sounds/bgm_travel.ogg");
+    _bgmAudio.loop = true;
+    _bgmAudio.volume = 0.32; // 은은하고 편안한 볼륨
+  } catch (e) {
+    // 무중단 보장
+  }
+}
+
+function startBGM() {
+  if (!_bgmEnabled) return;
+  initBGM();
+  if (_bgmAudio) {
+    _bgmAudio.play().catch(() => {
+      /* 사용자 인터랙션 대기 */
+    });
+  }
+  updateBgmButtonUI();
+}
+
+function pauseBGM() {
+  if (_bgmAudio) {
+    _bgmAudio.pause();
+  }
+  updateBgmButtonUI();
+}
+
+function toggleBGM() {
+  unlockAudio();
+  _bgmEnabled = !_bgmEnabled;
+  try {
+    localStorage.setItem("brumabal_bgm_enabled", _bgmEnabled ? "1" : "0");
+  } catch (e) {}
+
+  if (_bgmEnabled) {
+    startBGM();
+  } else {
+    pauseBGM();
+  }
+  return _bgmEnabled;
+}
+
+function updateBgmButtonUI() {
+  const btn = document.getElementById("btn-toggle-bgm");
+  if (!btn) return;
+  const isPlaying = _bgmEnabled && _bgmAudio && !_bgmAudio.paused;
+  btn.textContent = isPlaying ? "🎵" : "🔇";
+  btn.title = isPlaying ? "배경음악 끄기" : "배경음악 켜기";
+  btn.classList.toggle("is-active", isPlaying);
+}
+
+/** Web Audio 비상 폴백 단음 합성 (파일이 없을 때) */
 function _tone(freq, startAt, dur, type = "sine", gainPeak = 0.18) {
   const ctx = _ctx();
   if (!ctx) return;
@@ -43,104 +167,53 @@ function _tone(freq, startAt, dur, type = "sine", gainPeak = 0.18) {
   osc.stop(t0 + dur + 0.02);
 }
 
-// 효과음 정의: 음 높이(Hz) 시퀀스
 const SOUND_PATTERNS = {
   dice:        { notes: [[330, 0, 0.06, "square"], [440, 0.07, 0.06, "square"], [392, 0.14, 0.06, "square"]] },
-  // 주사위가 구르는 동안 — 달그락달그락
-  diceRoll:    { notes: [
-    [200, 0, 0.03, "square", 0.1], [170, 0.06, 0.03, "square", 0.1], [250, 0.12, 0.03, "square", 0.1],
-    [190, 0.19, 0.03, "square", 0.1], [240, 0.27, 0.03, "square", 0.1], [180, 0.36, 0.03, "square", 0.1],
-    [230, 0.46, 0.03, "square", 0.1], [200, 0.56, 0.03, "square", 0.1], [260, 0.68, 0.03, "square", 0.1],
-  ] },
-  move:        { notes: [[523, 0, 0.05, "triangle", 0.12]] },
-  // 칸을 한 칸씩 폴짝 — 짧은 블립(올라가며)
+  diceRoll:    { notes: [[200, 0, 0.03, "square", 0.1], [250, 0.12, 0.03, "square", 0.1], [220, 0.25, 0.03, "square", 0.1]] },
   step:        { notes: [[440, 0, 0.035, "sine", 0.15], [640, 0.035, 0.045, "sine", 0.13]] },
-  land:        { notes: [[392, 0, 0.08, "triangle", 0.18], [262, 0.06, 0.12, "triangle", 0.16]] },
-  // 묵직한 착지 충격음 (Impact Thud & Screen Shake)
-  heavyLand:   { notes: [
-    [180, 0, 0.08, "triangle", 0.3], [110, 0.04, 0.14, "sine", 0.35], [60, 0.09, 0.2, "sine", 0.4]
-  ] },
-  // 더블(Double) 달성 팡파레
-  doubleFanfare: { notes: [
-    [523, 0, 0.08, "triangle", 0.22], [659, 0.08, 0.08, "triangle", 0.22],
-    [784, 0.16, 0.1, "triangle", 0.24], [1047, 0.26, 0.22, "square", 0.28],
-    [1319, 0.48, 0.3, "triangle", 0.25]
-  ] },
-  // 무언가 입체적으로 "뿅" 튀어나올 때 (쉼터/황금열쇠)
-  pop:         { notes: [[300, 0, 0.05, "sine", 0.18], [520, 0.05, 0.06, "sine", 0.18], [430, 0.13, 0.12, "sine", 0.13]] },
-  // 쉼터 — 햄버거 냠냠 (경쾌하게 상승)
-  restStop:    { notes: [
-    [392, 0, 0.09, "triangle", 0.16], [523, 0.09, 0.09, "triangle", 0.16],
-    [659, 0.18, 0.1, "sine", 0.16], [784, 0.28, 0.16, "sine", 0.14],
-  ] },
-  // 황금열쇠 — 반짝반짝
-  keyReveal:   { notes: [
-    [1047, 0, 0.06, "sine", 0.14], [1319, 0.07, 0.06, "sine", 0.14],
-    [1568, 0.14, 0.09, "sine", 0.14], [2093, 0.22, 0.18, "sine", 0.11],
-  ] },
-  // 버튼/선택 — 딸깍
-  select:      { notes: [[880, 0, 0.02, "square", 0.07], [1175, 0.02, 0.03, "square", 0.06]] },
-  buy:         { notes: [[523, 0, 0.09], [659, 0.09, 0.09], [784, 0.18, 0.14]] },
-  coinGain:    { notes: [[784, 0, 0.07, "triangle"], [1047, 0.08, 0.12, "triangle"]] },
-  coinLoss:    { notes: [[392, 0, 0.1, "sawtooth", 0.14], [294, 0.1, 0.16, "sawtooth", 0.14]] },
-  quizCorrect: { notes: [[523, 0, 0.1], [659, 0.1, 0.1], [784, 0.2, 0.1], [1047, 0.3, 0.2]] },
-  quizWrong:   { notes: [[330, 0, 0.18, "sawtooth", 0.13], [247, 0.18, 0.28, "sawtooth", 0.13]] },
-  win:         { notes: [[523, 0, 0.14], [659, 0.14, 0.14], [784, 0.28, 0.14], [1047, 0.42, 0.36]] },
-  // 국가 구입 — 팡파레
-  buyFanfare:  { notes: [
-    [523, 0, 0.12, "square", 0.2], [659, 0.12, 0.12, "square", 0.2], [784, 0.24, 0.12, "square", 0.2],
-    [1047, 0.36, 0.28, "square", 0.24], [784, 0.36, 0.28, "triangle", 0.16], [1319, 0.5, 0.3, "triangle", 0.2],
-  ] },
-  // 건물 건설 — 망치 쿵쿵 + 반짝
-  build:       { notes: [
-    [120, 0, 0.1, "square", 0.26], [95, 0.14, 0.12, "square", 0.26],
-    [660, 0.3, 0.07, "triangle", 0.15], [880, 0.38, 0.07, "triangle", 0.15], [1175, 0.46, 0.16, "sine", 0.14],
-  ] },
-  // 랜드마크 완공 — 웅장한 팡파레
-  buildLandmark: { notes: [
-    [110, 0, 0.18, "square", 0.3], [523, 0.14, 0.12, "square", 0.2], [659, 0.26, 0.12, "square", 0.2],
-    [784, 0.38, 0.12, "square", 0.2], [1047, 0.5, 0.22, "square", 0.24], [1319, 0.62, 0.22, "triangle", 0.2],
-    [1568, 0.76, 0.34, "triangle", 0.2],
-  ] },
-  // 무인도 도착 (조난)
-  islandDrop: { notes: [
-    [330, 0, 0.12, "sawtooth", 0.16], [260, 0.12, 0.16, "sawtooth", 0.18],
-    [196, 0.28, 0.24, "triangle", 0.2], [130, 0.52, 0.35, "sine", 0.22],
-  ] },
-  // 사회복지기금 잭팟 (축제 환호)
-  welfareJackpot: { notes: [
-    [523, 0, 0.08, "triangle", 0.2], [659, 0.08, 0.08, "triangle", 0.2],
-    [784, 0.16, 0.08, "triangle", 0.2], [1047, 0.24, 0.14, "square", 0.25],
-    [1319, 0.38, 0.14, "square", 0.25], [1568, 0.52, 0.28, "square", 0.3],
-  ] },
-  // 세계여행 비행기 이륙
-  planeFly: { notes: [
-    [330, 0, 0.1, "sine", 0.15], [440, 0.09, 0.1, "sine", 0.18],
-    [554, 0.18, 0.12, "sine", 0.2], [659, 0.28, 0.14, "triangle", 0.22],
-    [880, 0.42, 0.25, "triangle", 0.2],
-  ] },
-  // 통행료 — 경보 사이렌 + 쿵! + 동전 우수수 (재미 포인트)
-  rentImpact:  { notes: [
-    [880, 0, 0.14, "sawtooth", 0.2], [640, 0.14, 0.16, "sawtooth", 0.2],
-    [880, 0.32, 0.14, "sawtooth", 0.2], [640, 0.46, 0.16, "sawtooth", 0.2],
-    [110, 0.64, 0.3, "sawtooth", 0.32], [80, 0.68, 0.34, "sawtooth", 0.26],
-    [1047, 0.86, 0.05, "triangle", 0.13], [880, 0.94, 0.05, "triangle", 0.12],
-    [1175, 1.02, 0.05, "triangle", 0.13], [784, 1.1, 0.14, "triangle", 0.12],
-  ] },
+  heavyLand:   { notes: [[180, 0, 0.08, "triangle", 0.3], [110, 0.04, 0.14, "sine", 0.35], [60, 0.09, 0.2, "sine", 0.4]] },
+  doubleFanfare: { notes: [[523, 0, 0.08, "triangle", 0.22], [659, 0.08, 0.08, "triangle", 0.22], [784, 0.16, 0.1, "triangle", 0.24], [1047, 0.26, 0.22, "square", 0.28]] },
+  keyReveal:   { notes: [[1047, 0, 0.06, "sine", 0.14], [1319, 0.07, 0.06, "sine", 0.14], [1568, 0.14, 0.09, "sine", 0.14], [2093, 0.22, 0.18, "sine", 0.11]] },
 };
 
-/** 효과음 재생. 소리 설정이 꺼져 있거나 잠금 해제 전이면 조용히 무시 */
+/**
+ * 효과음 재생 함수.
+ * 1순위: 실제 오디오 파일(.wav) 재생
+ * 2순위: 실패 시 Web Audio 폴백
+ */
 function playSound(name) {
-  if (!window.isSoundOn || !window.isSoundOn()) return;
+  if (window.isSoundOn && !window.isSoundOn()) return;
+
+  // 1순위: 리얼 오디오 파일 재생
+  const aud = _getAudioInstance(name);
+  if (aud) {
+    try {
+      aud.volume = (name === "heavyLand" || name === "diceRoll") ? 0.85 : 0.65;
+      aud.play().catch(() => {
+        _fallbackPlayTone(name);
+      });
+      return;
+    } catch (e) {
+      // 폴백으로 전환
+    }
+  }
+
+  // 2순위: Web Audio 폴백
+  _fallbackPlayTone(name);
+}
+
+function _fallbackPlayTone(name) {
   if (!_unlocked) return;
   const pattern = SOUND_PATTERNS[name];
   if (!pattern) return;
   try {
     pattern.notes.forEach(([f, at, dur, type, peak]) => _tone(f, at, dur, type, peak));
-  } catch (err) {
-    /* 오디오 오류는 게임 진행에 영향 주지 않음 */
-  }
+  } catch (err) {}
 }
 
 window.unlockAudio = unlockAudio;
 window.playSound = playSound;
+window.startBGM = startBGM;
+window.pauseBGM = pauseBGM;
+window.toggleBGM = toggleBGM;
+window.updateBgmButtonUI = updateBgmButtonUI;
