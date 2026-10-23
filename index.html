@@ -10,15 +10,15 @@
 <link rel="icon" href="assets/icons/icon-192.png" />
 <link rel="apple-touch-icon" href="assets/icons/icon-512.png" />
 
-<link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/piece.css" />
-<link rel="stylesheet" href="css/board.css" />
-<link rel="stylesheet" href="css/game.css" />
-<link rel="stylesheet" href="css/mobile.css" />
-<link rel="stylesheet" href="css/tablet.css" />
-<link rel="stylesheet" href="css/building.css" />
+<link rel="stylesheet" href="css/style.css?v=38" />
+<link rel="stylesheet" href="css/piece.css?v=38" />
+<link rel="stylesheet" href="css/board.css?v=38" />
+<link rel="stylesheet" href="css/game.css?v=38" />
+<link rel="stylesheet" href="css/mobile.css?v=38" />
+<link rel="stylesheet" href="css/tablet.css?v=38" />
+<link rel="stylesheet" href="css/building.css?v=38" />
 <!-- Stitch 디자인 시스템 반영 레이어(항상 마지막) -->
-<link rel="stylesheet" href="css/stitch-theme.css" />
+<link rel="stylesheet" href="css/stitch-theme.css?v=38" />
 </head>
 <body>
 <div id="app">
@@ -146,35 +146,34 @@
 </div>
 
 <!-- 데이터 -->
-<script src="data/countries.js"></script>
-<script src="data/pieces.js"></script>
-<script src="data/events.js"></script>
-<script src="data/quizzes.js"></script>
-<script src="data/buildings.js"></script>
+<script src="data/countries.js?v=38"></script>
+<script src="data/pieces.js?v=38"></script>
+<script src="data/events.js?v=38"></script>
+<script src="data/quizzes.js?v=38"></script>
+<script src="data/buildings.js?v=38"></script>
 
 <!-- 엔진 -->
-<script src="js/country.js"></script>
-<script src="js/piece.js"></script>
-<script src="js/player.js"></script>
-<script src="js/board.js"></script>
-<script src="js/dice.js"></script>
-<script src="js/property.js"></script>
-<script src="js/quiz.js"></script>
-<script src="js/event.js"></script>
-<script src="js/ai.js"></script>
-<script src="js/settings.js"></script>
-<script src="js/sound.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/game.js"></script>
+<script src="js/country.js?v=38"></script>
+<script src="js/piece.js?v=38"></script>
+<script src="js/player.js?v=38"></script>
+<script src="js/board.js?v=38"></script>
+<script src="js/dice.js?v=38"></script>
+<script src="js/property.js?v=38"></script>
+<script src="js/quiz.js?v=38"></script>
+<script src="js/event.js?v=38"></script>
+<script src="js/ai.js?v=38"></script>
+<script src="js/settings.js?v=38"></script>
+<script src="js/sound.js?v=38"></script>
+<script src="js/storage.js?v=38"></script>
+<script src="js/game.js?v=38"></script>
 
 <!-- 화면 -->
-<script src="js/ui.js"></script>
-<script src="js/main.js"></script>
-<script src="js/intro.js"></script>
+<script src="js/ui.js?v=38"></script>
+<script src="js/main.js?v=38"></script>
+<script src="js/intro.js?v=38"></script>
 
 <script>
   if ("serviceWorker" in navigator) {
-    // 새 버전이 배포되면 서비스워커가 교체되는 즉시 한 번 새로고침해서 바로 반영
     let swRefreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (swRefreshing) return;
@@ -182,8 +181,11 @@
       window.location.reload();
     });
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("service-worker.js").catch((err) => {
-        console.warn("서비스워커 등록 실패(파일을 file://로 직접 열면 정상, http(s) 서버에서는 자동 등록):", err);
+      navigator.serviceWorker.register("./service-worker.js?v=38").then((reg) => {
+        // 즉시 백그라운드 업데이트 검사
+        reg.update();
+      }).catch((err) => {
+        console.warn("서비스워커 등록 실패:", err);
       });
     });
   }
