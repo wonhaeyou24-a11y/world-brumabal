@@ -222,6 +222,7 @@ function renderTileBuilding(tileEl, tile, gameState, opts = {}) {
   slot.dataset.ready = "1";
   tileEl.dataset.bldLevel = String(level);
   tileEl.classList.toggle("tile--landmark", level >= (window.BUILDING_MAX_LEVEL ?? 4));
+  tileEl.classList.toggle("tile--has-bld", level > 0);
 
   if (level <= 0) {
     slot.innerHTML = "";
@@ -233,15 +234,13 @@ function renderTileBuilding(tileEl, tile, gameState, opts = {}) {
   if (!stage || !country) { slot.innerHTML = ""; return; }
 
   const pips = Array.from({ length: Math.min(level, 3) }, () => "<i></i>").join("");
-  const photo =
-    level >= 4
-      ? `<img class="bld-photo" src="${country.landmarkImg}" alt="" onerror="this.classList.add('is-missing')" />`
-      : "";
   slot.className = `tile-building tile-building--l${level}` + (justBuilt ? " is-new" : "");
   slot.title = `${stage.label} (통행료 ×${stage.rentMul})`;
   slot.innerHTML =
-    `${photo}<span class="bld-icon">${stage.emoji}</span>` +
-    (level < 4 ? `<span class="bld-pips">${pips}</span>` : `<span class="bld-crown">✨</span>`);
+    `<span class="bld-icon">${stage.emoji}</span>` +
+    (level < 4
+      ? `<span class="bld-pips">${pips}</span>`
+      : `<span class="bld-lm-badge">LM</span><span class="bld-crown">✨</span>`);
 }
 
 function renderBoardDynamic(gameState, opts = {}) {

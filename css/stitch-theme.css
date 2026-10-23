@@ -240,37 +240,38 @@ body {
 .dice-face .pip-bl { grid-area: 3 / 1; }
 .dice-face .pip-br { grid-area: 3 / 3; }
 
-/* 3D 텀블링 애니메이션 */
+/* 리얼 물리 주사위 롤링 애니메이션 (방정맞은 과도회전 제거, 관성 감속 텀블링) */
 .dice-stage-die.tumble-1 .dice-face {
-  animation: dice-tumble-1 0.62s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation: dice-tumble-natural-1 1.05s cubic-bezier(0.2, 0.75, 0.35, 1) forwards;
 }
 .dice-stage-die.tumble-2 .dice-face {
-  animation: dice-tumble-2 0.55s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation: dice-tumble-natural-2 1.05s cubic-bezier(0.2, 0.75, 0.35, 1) forwards;
 }
-@keyframes dice-tumble-1 {
-  0% { transform: translateY(0) rotate(0deg) scale(1); }
-  25% { transform: translateY(-38px) rotate(-140deg) scale(1.16); }
-  50% { transform: translateY(-12px) rotate(180deg) scale(0.94); }
-  75% { transform: translateY(-44px) rotate(320deg) scale(1.15); }
-  100% { transform: translateY(0) rotate(720deg) scale(1); }
+@keyframes dice-tumble-natural-1 {
+  0% { transform: translateY(-18px) rotate(0deg) scale(0.95); }
+  25% { transform: translateY(-8px) rotate(-90deg) scale(1.04); }
+  50% { transform: translateY(0px) rotate(-180deg) scale(0.98); }
+  75% { transform: translateY(-4px) rotate(-270deg) scale(1.02); }
+  92% { transform: translateY(-1px) rotate(-345deg) scale(1.01); }
+  100% { transform: translateY(0px) rotate(-360deg) scale(1); }
 }
-@keyframes dice-tumble-2 {
-  0% { transform: translateY(0) rotate(0deg) scale(1); }
-  25% { transform: translateY(-42px) rotate(160deg) scale(1.14); }
-  50% { transform: translateY(-16px) rotate(-180deg) scale(0.92); }
-  75% { transform: translateY(-34px) rotate(-340deg) scale(1.16); }
-  100% { transform: translateY(0) rotate(-720deg) scale(1); }
+@keyframes dice-tumble-natural-2 {
+  0% { transform: translateY(-20px) rotate(0deg) scale(0.95); }
+  25% { transform: translateY(-10px) rotate(90deg) scale(1.05); }
+  50% { transform: translateY(0px) rotate(180deg) scale(0.98); }
+  75% { transform: translateY(-3px) rotate(270deg) scale(1.02); }
+  92% { transform: translateY(-1px) rotate(345deg) scale(1.01); }
+  100% { transform: translateY(0px) rotate(360deg) scale(1); }
 }
 
-/* 착지 쿵! 슬램다운 */
+/* 착지 쿵! 슬램다운 (단단하고 묵직한 착지 안착) */
 .dice-stage-die.slam-down .dice-face {
-  animation: dice-slam-down 0.45s cubic-bezier(0.2, 1.8, 0.4, 1) forwards;
+  animation: dice-slam-down 0.32s cubic-bezier(0.22, 1.25, 0.36, 1) forwards;
 }
 @keyframes dice-slam-down {
-  0% { transform: translateY(-55px) scale(1.25) rotate(12deg); opacity: 0.85; }
-  60% { transform: translateY(4px) scale(1.22, 0.82) rotate(-3deg); opacity: 1; }
-  80% { transform: translateY(-5px) scale(0.95, 1.05) rotate(1deg); }
-  100% { transform: translateY(0) scale(1, 1) rotate(0deg); }
+  0% { transform: translateY(-6px) scale(1.05); }
+  50% { transform: translateY(2px) scale(1.02, 0.98); }
+  100% { transform: translateY(0) scale(1, 1); }
 }
 
 /* 더블(Double) 시 금빛 발광 */

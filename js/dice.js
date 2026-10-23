@@ -157,21 +157,26 @@ function rollDiceInCenter(onFinish) {
     return;
   }
 
-  // 3D 텀블링 롤링 애니메이션 시작
+  // 3D 리얼 텀블링 롤링 애니메이션 시작
   die.className = "dice-stage-die tumble-1";
   die2.className = "dice-stage-die tumble-2";
 
-  // 실시간 주사위 눈 플리커 (초고속 도트 회전 착시)
-  const flickerTimer = setInterval(() => {
-    setDieFace(die, Math.floor(Math.random() * 6) + 1);
-    setDieFace(die2, Math.floor(Math.random() * 6) + 1);
-  }, 45);
+  // 물리적 감속 주사위 눈 회전 (처음엔 빠르게 구르다가 점차 감속하며 자연스럽게 안착)
+  const stepDelays = [65, 75, 90, 115, 150, 195, 260];
+  let stepIndex = 0;
 
-  setTimeout(() => {
-    clearInterval(flickerTimer);
-    showResult();
-    setTimeout(done, 1200);
-  }, 850);
+  const rollStep = () => {
+    if (stepIndex < stepDelays.length) {
+      setDieFace(die, Math.floor(Math.random() * 6) + 1);
+      setDieFace(die2, Math.floor(Math.random() * 6) + 1);
+      setTimeout(rollStep, stepDelays[stepIndex]);
+      stepIndex++;
+    } else {
+      showResult();
+      setTimeout(done, 1200);
+    }
+  };
+  rollStep();
 }
 
 window.rollDiceValue = rollDiceValue;
